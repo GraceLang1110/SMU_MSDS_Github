@@ -1,0 +1,79 @@
+---
+title: "Assignment03_Summer19_Grace_Lang"
+author: "Grace Lang"
+date: "5/27/2019"
+output: html_document
+---
+# GitHub Cloning (20 points):   
+Utilized GitBash shell to pull html version onto local machine.   
+![Clone info](C:/Users\david\Desktop\DoingDataScience\Assignments\Assignment03\GitClone.png)   
+
+# Data Summary (20 points):   
+2A - 2B
+```{r gender}
+df <- read.csv(file = "C:/Users/david/Desktop/DoingDataScience/Assignments/Assignment03/awesome-public-datasets/Datasets/titanic.csv", header= TRUE)
+
+counts <- table(df$Sex)
+barplot(counts,main = "Gender of Passengers", xlab="Gender", ylab = "Number of Passengers")
+```   
+
+2C
+``` {r means}
+compare <- df[ , c(2,6,10)]
+sapply(compare, mean, na.rm = TRUE)
+```   
+
+# Function Building (30 points):   
+3A - 3D
+``` {r sleep}
+sleep <- read.csv(file = "C:/Users/david/Downloads/sleep_data_01.csv", header= TRUE)
+
+helper <- function(x) {
+  MedianAge <- median(x$Age, na.rm=TRUE)
+  MinSleep <- min(x$Duration, na.rm=TRUE)
+  MaxSleep <- max(x$Duration, na.rm = TRUE)
+  SelfEsteem <- mean(x$RSES, na.rm=TRUE)
+  SE_SD <- sd(x$RSES, na.rm = TRUE)
+  
+  report <- data.frame("MedianAge" = MedianAge
+                     , "SelfEsteem" = SelfEsteem/5
+                     , "SE_SD" = SE_SD/5
+                     , "DurationRange" = MaxSleep - MinSleep)
+  
+  round(report, digits = 2)
+}
+```
+3E
+``` {r helper}
+helper(sleep)
+```   
+
+# Data Summary (30 points):    
+4A - 4D
+``` {r 538}
+#install.packages("fivethirtyeight")
+#data(package="fivethirtyeight")
+df <- fivethirtyeight::college_recent_grads
+#vignette("fivethirtyeight", package = "fivethirtyeight")   
+
+#College Grad Article: http://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/ 
+dim(df)
+colnames(df)
+```   
+
+#Data Summary (30 points):   
+5A - 5D
+```{r}
+colnames(df)
+ncol(df)
+major_count <- data.frame(table(df$major_category)) ##I recommend using libraries to help?
+par(las=2)
+par(mar=c(5,15,4,2)+0.1)
+barplot(major_count$Freq, main = "Number of Majors by Industry Category", horiz=TRUE, xlab = "Number of Sub-Majors", ylab = "Majors", col="orange", names.arg = major_count$Var1, cex.names = 0.8)
+#Write CSV to local directory
+write.csv(major_count, "Major_Count_of_Recent_Grads.csv", row.names=FALSE)
+```   
+
+# Codebook (30 points):   
+6A - 6D   
+https://github.com/GraceLang1110/SMU_MSDS_Github
