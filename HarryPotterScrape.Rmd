@@ -1,0 +1,20 @@
+---
+title: "HarryPotterScrape"
+author: "Grace Lang"
+date: "5/29/2019"
+output: html_document
+---
+
+```{r setup}
+library(XML)
+library(RCurl)
+
+```
+
+## Scraping the Harry Potter IMDB
+Exploring how to find the cast by scraping    
+
+cy.getCastList = function (doc, stopwords = StopWords)
+  {
+    names = getNames(doc, "//table class = 'cast list'")
+  }
