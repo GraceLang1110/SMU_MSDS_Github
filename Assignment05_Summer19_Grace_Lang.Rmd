@@ -1,0 +1,63 @@
+---
+title: "Assignment05_Summer19_Grace_Lang"
+author: "Grace Lang"
+date: "6/9/2019"
+output: html_document
+---
+# Data Munging (30 points):
+## Importing file and showing the summary & structure with proper names
+```{r setup}
+#library(tidyverse)
+URL <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%205/yob2016.txt"
+df <- read.table(URL,sep=";")
+colnames(df) <- c("Name","Gender","2016 Name Count")
+
+str(df)
+summary(df)
+```
+
+## Find the duplicates & the one entry ending in "yyy" and delete
+```{r find duplicate}
+df$Name <- as.character(df$Name) #Changing factors to characters for grep
+grep("yyy$",df$Name,ignore.case=TRUE, value=TRUE)
+```
+```{r removing row}
+y2016 <- subset(df, !grepl("yyy$", df$Name))
+```
+
+# Data Merging (30 points):
+## Import file and display last 10 rows
+```{r 2015 names}
+URL2 <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%205/yob2015.txt"
+y2015 <- read.table(URL2, sep=",")
+colnames(y2015) <- c("Name","Gender","2015 Name Count")
+tail(y2015,10)
+```
+### What is interesting about the last 10 rows?
+#### The last 10 rows are all Males starting with Z and only having counts of 5. It makes me think there may be some sorting within the raw file, listing the females first, then the males. It also leads me to believe that there may have been a threshold for which names are included in this file. For example, this file only shows names that we given to at least 5 children for the year.    
+
+## Merge 2016 & 2015 Names (inner join)
+```{r join years}
+final <- merge(y2016,y2015, by ="Name")
+summary(final) #checking to make sure there is no NAs
+final$'2016 Name Count'[is.na(final$`2016 Name Count`)] #checking to make sure there is no NAs
+final$'2015 Name Count'[is.na(final$`2015 Name Count`)] #checking to make sure there is no NAs
+```
+
+# Data Summary(30 points):
+## Create a Total column with 2015 & 2016 counts combined
+```{r total}
+final$Total <- final$`2015 Name Count`+ final$`2016 Name Count`
+```   
+## Look for the top 10 names by Total
+```{r top 10}
+Top10 <- final[order(-final$Total), ]
+head(Top10,10)
+```
+## Look for the top 10 names by Total, ommitting all the boys
+```{r top girls}
+TopGirls <- subset(Top10,Top10$Gender.x=="F")
+head(TopGirls)
+ 
+write.csv(c(TopGirls$Name, TopGirls$Total),"Popular_Girl_Names_2015_2016.csv")
+```
