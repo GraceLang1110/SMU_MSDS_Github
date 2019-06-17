@@ -7,5 +7,7 @@ SMU Summer 19 Doing Data Science Homework
   * Week 3: Rmd & HTML file; sources include [FiveThirtyEight](https://github.com/rudeboybert/fivethirtyeight)
   * Week 4: TBD
   * Week 5: Rmd, HTML & csv file all listed with "Assignment 05" in the commit comment
+  * Week 6: Saved in the /Homework/ folder (I'll be trying to save everything here from now on) Rmd, html & csv file
+  * Week 7: no homework to upload
   
 ## You can contact me at GracieL@smu.edu (Grace Lang) in case there are any questions
