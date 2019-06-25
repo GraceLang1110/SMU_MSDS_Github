@@ -18,7 +18,7 @@ This codebook provides an overview of the data as it was received and any modifi
 
 ### Data Files Received
 
-DDSAnalytics provided our consulting group with a Comma Delimited File (.csv) file titled Beers.csv & Breweries.csv. 
+Anheiser Busch provided our consulting group with two Comma Delimited files (.csv) file titled Beers.csv & Breweries.csv. 
 
 ```{r data import}
 BeersCSV <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%207/Beers.csv"
@@ -29,10 +29,19 @@ Brew <- read.csv(url(BrewCSV))
 
 ```
 
+### Data Collection
+
+It is unclear how this data was collected. Our consulting group contacted the source, but did not receive a description on the methodology used. Because of this unknown, when there was incomplete data, our consulting group dropped the rows used in final analysis. 
+
 ### Initial Data Structure
 
 The data contained within the provided table has the following variable names and types: 
 <br>
+
+
+Derived variables include: 
+
+### Beers.csv
 
 ```{r}
 kable(t(lapply(Beers,class)))%>%
@@ -40,9 +49,7 @@ kable(t(lapply(Beers,class)))%>%
   scroll_box(height = 100, width = 500)
 ```
 
-Derived variables include: 
 
-# Beers.csv
 
 | Variable              | Values        | Purpose                                                |
 |-----------------------|:-------------:|-------------------------------------------------------:|
@@ -54,7 +61,16 @@ Derived variables include:
 | Style           | factor       | Style of the beer             |
 | Ounces | numeric    | Ounces of beer   | 
 
-# Breweries.csv
+
+### Breweries.csv
+
+```{r}
+kable(t(lapply(Brew,class)))%>%
+  kable_styling()%>%
+  scroll_box(height = 100, width = 500)
+```
+
+
 
 | Variable              | Values        | Purpose                                                |
 |-----------------------|:-------------:|-------------------------------------------------------:|
@@ -63,20 +79,43 @@ Derived variables include:
 | City             | factor       | City where the brewery is located       |
 | State            | factor       | U.S. State where the brewery is located     |
 
-### Test Models
+### Data Cleaning
 
-A number of test models were created to help identify features provided in the data set that contribute to Attrition rates within the population. 
+The two tables can be joined on Beers.Brewery_ID and Breweries.Brew_ID. There are a handful of breweries that have duplicate name and different Brewery ID. They can be identified and resolved with the following code. 
 
-#### Model 1: Logistic Regression
+```{r}
+Brew$Name[duplicated(Brew$Name)]
+#checking our dataframe, we can identify some duplicates in our dataset. Let's investigate further to see if any need to be removed.
+Brew[Brew$Name=='Blackrocks Brewery',] # appears that flying sailor is a part of the MI blackrocks, so combine them
+Brew[Brew$Name=='Summit Brewing Company',] # both appear to be the same brewery, so combine 159 into 39
+Brew[Brew$Name=='Otter Creek Brewing',] # looks like middlebury is the correct location
+Brew[Brew$Name=='Sly Fox Brewing Company',] # this appears to be two actual locations of the same brewery, so let's leave as is, same state
+Brew[Brew$Name=='Blue Mountain Brewery',] #appears to be two locations of the same brewery. Keep as is for now, same state
+Brew[Brew$Name=='Lucette Brewing Company',] # looks like the correct spelling of the city is Monomonie, so we'll need to change the other
+Brew[Brew$Name=='Oskar Blues Brewery',] #looks like the correct location is longmont
 
-A logistic regression model to predict whether an employee -- based on provided features -- would be in class (AttritionCode = 1) or out of Class. This model accepts all of the provided categorical and continuous variables and determines their impact on Attrition. The model is un-normalized and unweighted and provides only a first step analysis. Despite this, however, it is capable of achieving accuracy rates of 87% with Precision values of 90.7% and Recall of 94.9%. 
 
-This model is described by the statement: 
+#Combining two tables 
+colnames(Beers)[colnames(Beers)=="Brewery_id"] <- "Brew_ID" #Rename for the same key
+Combined <- merge(Beers, Brew, by = "Brew_ID") # Merge files
+colnames(Combined)[colnames(Combined)=="Name.x"] <- "Beer Name"
+colnames(Combined)[colnames(Combined)=="Name.y"] <- "Brewery_Name"
 
-```{r eval=FALSE, echo=TRUE}
-AttritionCode ~ Age + JobRole + StockOptionLevel + WorkLifeBalance + 
-              YearsSinceLastPromotion + EnvironmentSatisfaction + JobInvolvement + 
-              OverTime + RelationshipSatisfaction + YearsAtCompany + YearsWithCurrManager + 
-              BusinessTravel + DistanceFromHome + Gender + MaritalStatus + 
-              NumCompaniesWorked + YearsInCurrentRole
+
+#Combining the duplicate Breweries into one Brew_ID and fixing some data entry issues, proved by Google searches
+
+Combined[Combined$Brew_ID == '96',"Brew_ID"] <- 13
+Combined$State <- as.character(Combined$State) #refactoring the whole column, so insert should work
+Combined[Combined$Beer_ID == 2449 ,"State"] <- "MI" ## needs work, throwing error 'invalid factor level, NA generated'
+Combined[Combined$Brew_ID == '139',"Brew_ID"] <- 59
+Combined[Combined$Beer_ID == 2352 ,"City"] <- "St. Paul"
+Combined[Combined$Brew_ID == '262',"Brew_ID"] <- 276
+Combined[Combined$Brew_ID == 276 ,"City"] <- "Middlebury"
+Combined[Combined$Brew_ID == '378',"Brew_ID"] <- 457
+Combined$City <- as.character(Combined$City) #refactoring the whole column, so insert should work
+Combined[Combined$Beer_ID == 1571 ,"City"] <- "Menomonie"
+Combined[Combined$Brew_ID == '504',"Brew_ID"] <- 167
+Combined[Combined$Brew_ID == 167 ,"City"] <- "Longmont" 
+
 ```
+

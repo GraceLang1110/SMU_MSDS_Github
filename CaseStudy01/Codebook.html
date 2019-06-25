@@ -395,11 +395,19 @@ $(document).ready(function () {
 <p>This codebook provides an overview of the data as it was received and any modifications that were required to support our analysis. It is a documentation of the variables in the data set, any normalization or modifications that were made, and should support replication of our analysis.</p>
 <div id="data-files-received" class="section level3">
 <h3>Data Files Received</h3>
-<p>DDSAnalytics provided our consulting group with a Comma Delimited File (.csv) file titled Beers.csv &amp; Breweries.csv.</p>
+<p>Anheiser Busch provided our consulting group with two Comma Delimited files (.csv) file titled Beers.csv &amp; Breweries.csv.</p>
+</div>
+<div id="data-collection" class="section level3">
+<h3>Data Collection</h3>
+<p>It is unclear how this data was collected. Our consulting group contacted the source, but did not receive a description on the methodology used. Because of this unknown, when there was incomplete data, our consulting group dropped the rows used in final analysis.</p>
 </div>
 <div id="initial-data-structure" class="section level3">
 <h3>Initial Data Structure</h3>
 <p>The data contained within the provided table has the following variable names and types: <br></p>
+<p>Derived variables include:</p>
+</div>
+<div id="beers.csv" class="section level3">
+<h3>Beers.csv</h3>
 <div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:100; overflow-x: scroll; width:500; ">
 <table class="table" style="margin-left: auto; margin-right: auto;">
 <thead>
@@ -454,11 +462,6 @@ numeric
 </tbody>
 </table>
 </div>
-<p>Derived variables include:</p>
-</div>
-</div>
-<div id="beers.csv" class="section level1">
-<h1>Beers.csv</h1>
 <table>
 <thead>
 <tr class="header">
@@ -506,8 +509,44 @@ numeric
 </tbody>
 </table>
 </div>
-<div id="breweries.csv" class="section level1">
-<h1>Breweries.csv</h1>
+<div id="breweries.csv" class="section level3">
+<h3>Breweries.csv</h3>
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:100; overflow-x: scroll; width:500; ">
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Brew_ID
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Name
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+City
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+State
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+integer
+</td>
+<td style="text-align:left;">
+factor
+</td>
+<td style="text-align:left;">
+factor
+</td>
+<td style="text-align:left;">
+factor
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <table>
 <thead>
 <tr class="header">
@@ -539,19 +578,35 @@ numeric
 </tr>
 </tbody>
 </table>
-<div id="test-models" class="section level3">
-<h3>Test Models</h3>
-<p>A number of test models were created to help identify features provided in the data set that contribute to Attrition rates within the population.</p>
-<div id="model-1-logistic-regression" class="section level4">
-<h4>Model 1: Logistic Regression</h4>
-<p>A logistic regression model to predict whether an employee – based on provided features – would be in class (AttritionCode = 1) or out of Class. This model accepts all of the provided categorical and continuous variables and determines their impact on Attrition. The model is un-normalized and unweighted and provides only a first step analysis. Despite this, however, it is capable of achieving accuracy rates of 87% with Precision values of 90.7% and Recall of 94.9%.</p>
-<p>This model is described by the statement:</p>
-<pre class="r"><code>AttritionCode ~ Age + JobRole + StockOptionLevel + WorkLifeBalance + 
-              YearsSinceLastPromotion + EnvironmentSatisfaction + JobInvolvement + 
-              OverTime + RelationshipSatisfaction + YearsAtCompany + YearsWithCurrManager + 
-              BusinessTravel + DistanceFromHome + Gender + MaritalStatus + 
-              NumCompaniesWorked + YearsInCurrentRole</code></pre>
 </div>
+<div id="data-cleaning" class="section level3">
+<h3>Data Cleaning</h3>
+<p>The two tables can be joined on Beers.Brewery_ID and Breweries.Brew_ID. There are a handful of breweries that have duplicate name and different Brewery ID. They can be identified and resolved with the following code.</p>
+<pre><code>## [1] Blackrocks Brewery      Summit Brewing Company  Otter Creek Brewing    
+## [4] Sly Fox Brewing Company Blue Mountain Brewery   Lucette Brewing Company
+## [7] Oskar Blues Brewery    
+## 551 Levels: 10 Barrel Brewing Company ... Wynkoop Brewing Company</code></pre>
+<pre><code>##    Brew_ID               Name      City State
+## 13      13 Blackrocks Brewery Marquette    MI
+## 96      96 Blackrocks Brewery Marquette    MA</code></pre>
+<pre><code>##     Brew_ID                   Name     City State
+## 59       59 Summit Brewing Company St. Paul    MN
+## 139     139 Summit Brewing Company  St Paul    MN</code></pre>
+<pre><code>##     Brew_ID                Name       City State
+## 262     262 Otter Creek Brewing  Waterbury    VT
+## 276     276 Otter Creek Brewing Middlebury    VT</code></pre>
+<pre><code>##     Brew_ID                    Name         City State
+## 164     164 Sly Fox Brewing Company Phoenixville    PA
+## 372     372 Sly Fox Brewing Company    Pottstown    PA</code></pre>
+<pre><code>##     Brew_ID                  Name      City State
+## 383     383 Blue Mountain Brewery     Afton    VA
+## 415     415 Blue Mountain Brewery Arrington    VA</code></pre>
+<pre><code>##     Brew_ID                    Name      City State
+## 378     378 Lucette Brewing Company Menominee    WI
+## 457     457 Lucette Brewing Company Menominie    WI</code></pre>
+<pre><code>##     Brew_ID                Name     City State
+## 167     167 Oskar Blues Brewery Longmont    CO
+## 504     504 Oskar Blues Brewery    Lyons    CO</code></pre>
 </div>
 </div>
 
