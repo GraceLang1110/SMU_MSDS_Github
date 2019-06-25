@@ -1,0 +1,77 @@
+---
+title: "Assignment06_Summer19_Grace_Lang"
+author: "Grace Lang"
+date: "6/15/2019"
+output: html_document
+---
+# 1. Mental Health Clinics (40%):
+## 1 A & B
+```{r setup, echo = false}
+library(dplyr)
+library(ggplot2)
+library(ggthemes)
+```
+```{r file load}
+#save(mh2015_puf, file ="mh2015_puf.rda")
+#mh2015_puf <- load(file = "mh2015_puf.rda")
+mh2015_puf <- read.csv("C:/Users/david/Desktop/DoingDataScience/SMU_MSDS_Github/Homework/mh2015_puf.csv")
+#Finding distinct States listed in data
+StateTotal <- unique(mh2015_puf$LST)
+StateTotal
+```
+## 1 C
+```{r VA}
+#Filtering to only VA Centers, remove Alaska, Hawaii & US Territories, include DC
+VA_Data <- dplyr::filter(mh2015_puf,grepl("VAMC",FACILITYTYPE)) 
+VA_Data_NoTerr <- dplyr::filter(VA_Data, !grepl('PR|AK|HI',LST))
+#Table already setup as data.frame
+VA_Data_NoTerr_Plot <- as.data.frame(VA_Data_NoTerr)
+#Plot the # of VA Centers by State
+VA_Table <- VA_Data_NoTerr_Plot %>% group_by(LST) %>% dplyr::summarise(StateCount = n_distinct(CASEID))
+as.data.frame(VA_Table)
+```
+## 1 D
+```{r plot VA}
+ggplot(VA_Table, aes(x=LST,y=StateCount,fill=LST)) + geom_bar(stat = "identity") +labs(x = "State", y = "Number of VA Centers") + theme(axis.text.x = element_text(angle=90),legend.position = "none",plot.title= element_text(hjust = 0.5)) + ggtitle("Number of Veterans Administration Medical Centers by State")
+
+```
+
+# 2. Cleaning and Bringing in New Features (60%):
+## 2 A
+```{r}
+URL <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%206/statesize.csv"
+StateSize <- read.csv(URL, header=TRUE)
+
+head(paste(VA_Data_NoTerr_Plot$LST),5)
+```
+### The reason the two files will not merge properly is because the State fiels in my VA table has trailing spaces, which was not apparent when doing exploratory work with just one file. In order to properly merge, I will need to trim the spaces in the VA Table. 
+
+# 2 B
+```{r trimmed VA Table Merge}
+#Create a function for trimming
+trim <- function(x) { gsub("(^[[:space:]]+|[[:space:]]+$)", "", x) }
+VA_Table_Trimmed <- trim(VA_Data_NoTerr_Plot$LST)
+
+VA_Table_Trimmed <- data.frame(LST = trim(VA_Table$LST), StateCount = VA_Table$StateCount)
+
+Combined <- merge(VA_Table_Trimmed,StateSize, by.x="LST",by.y="Abbrev")
+```
+
+# 2 C
+```{r New Variable}
+Combined$VA_per_K_Miles <- Combined$StateCount / (Combined$SqMiles/1000)
+head(Combined,5)
+```
+
+# 2 D
+```{r Plot VAs}
+colorPallete <- c( "#E69F00", "#56B4E9", "#009E73", "#CC79A7")
+
+ggplot(Combined,aes(x=reorder(LST,-VA_per_K_Miles),y=VA_per_K_Miles,fill=Region)) + geom_bar(stat = "identity") + theme_economist_white() + theme(axis.text.x = element_text(angle=90), plot.title = element_text(hjust = 0.5)) + labs(x = "State", y = "Number of VA Centers per 1k miles", title = "Number of VA Medical Centers per 1,000 Miles by State") + scale_fill_manual(values = colorPallete)
+
+```
+
+# 2 E
+### Looking at the chart, the Northeast has VA hospitals in closer proximity compared to the other regions. This makes sense considering the states in the Northeast are smaller and closer together. The South & West have a lower amount of VA hospitals per 1k miles, but these states are larger in spread and have areas that are not as populated. 
+
+### If I was to continue to build a model off of this, I would maybe tweak the data to be how close are VA hospitals to more populated areas or city centers. Then could you decide what areas do not have easily accessible medical care for Veterans. Maybe there are some high-density populations that could benefit from a new build.  
