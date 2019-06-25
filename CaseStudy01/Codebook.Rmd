@@ -1,0 +1,72 @@
+---
+title: "Codebook.rmd"
+author: "Daniel Clark & Grace Lang"
+date: "6/15/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(knitr)
+library(kableExtra)
+library(readxl)
+```
+
+## Anheiser Busch Brewery Descriptive Statistical Analysis
+
+This codebook provides an overview of the data as it was received and any modifications that were required to support our analysis. It is a documentation of the variables in the data set, any normalization or modifications that were made, and should support replication of our analysis. 
+
+### Data Files Received
+
+DDSAnalytics provided our consulting group with a Comma Delimited File (.csv) file titled Beers.csv & Breweries.csv. 
+
+```{r data import}
+URL <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%205/yob2016.txt"
+df <- read.table(URL,sep=";")
+
+```
+
+### Initial Data Structure
+
+The data contained within the provided table has the following variable names and types: 
+<br>
+
+```{r}
+kable(t(lapply(df,class)))%>%
+  kable_styling()%>%
+  scroll_box(height = 100, width = 500)
+```
+
+Derived variables include: 
+
+# Beers.csv
+
+| Variable              | Values        | Purpose                                                |
+|-----------------------|:-------------:|-------------------------------------------------------:|
+| AttritionCode         | 1 or 0        | If Attrition = "Yes", AttritionCode = 1 and vice versa |
+| OvertimeCode          | 1 or 0        | If Overtime = "Yes", OvertimeCode = 1 and vice versa   |
+| maleperc              | integer       | Percentage of employees that are male from total       |
+| femaleperc            | integer       | Percentage of employees that are female from total     |
+| mean_hr               | integer       | Mean Job satisfaction of HR employees                  |
+| mean_non_hr           | integer       | Mean Job satisfaction of Non-HR employees              |
+| jobroleAttritionRates | data.frame    | A data frame containing attrition rates per job role   | 
+
+# Breweries.csv
+
+### Test Models
+
+A number of test models were created to help identify features provided in the data set that contribute to Attrition rates within the population. 
+
+#### Model 1: Logistic Regression
+
+A logistic regression model to predict whether an employee -- based on provided features -- would be in class (AttritionCode = 1) or out of Class. This model accepts all of the provided categorical and continuous variables and determines their impact on Attrition. The model is un-normalized and unweighted and provides only a first step analysis. Despite this, however, it is capable of achieving accuracy rates of 87% with Precision values of 90.7% and Recall of 94.9%. 
+
+This model is described by the statement: 
+
+```{r eval=FALSE, echo=TRUE}
+AttritionCode ~ Age + JobRole + StockOptionLevel + WorkLifeBalance + 
+              YearsSinceLastPromotion + EnvironmentSatisfaction + JobInvolvement + 
+              OverTime + RelationshipSatisfaction + YearsAtCompany + YearsWithCurrManager + 
+              BusinessTravel + DistanceFromHome + Gender + MaritalStatus + 
+              NumCompaniesWorked + YearsInCurrentRole
+```
