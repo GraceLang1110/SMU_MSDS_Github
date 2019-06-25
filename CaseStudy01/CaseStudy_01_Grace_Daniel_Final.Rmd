@@ -1,0 +1,312 @@
+---
+title: "Case Study_01"
+author: "Daniel Clark & Grace Lang"
+date: "6/15/2019"
+output: html_document
+---
+
+# Anheuser-Busch InBev Nationwide distillery Analysis
+
+## Introduction
+U.S. Beer Market is growing more saturated with small-scale breweries taking more market share and shelf space from the National Domestic Beer Manufacturers. Newer brands are covering the spectrum of bitterness and gravity size, and they are beginning to spread across the country. As AB Inbev is looking to test the waters in the craft brew space, understanding the local trends with these factors may help open market deficiencies as well as locations that may enjoy a bitter beer over others. This information can help guide AB Inbev with insight to opening new chains of micro-brews around the country. 
+
+## Loading our data
+Budweiser supplied a large amount of data of Breweries around the US, Microbrew beers and some data on the alcohol by volume (ABV) and Bitterness score (IBU). We will be able to utilize this code to capture some insights on some factors enjoyed by beer drinkers around the country.
+
+
+Load the code chunks from CSV files saved on Github's site. There are two seperate files; one of breweries in the US and the second on the Beers sold at microbrews.
+
+```{r setup}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(stats)
+
+BeersCSV <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%207/Beers.csv"
+Beers <- read.csv(url(BeersCSV))
+
+BrewCSV <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%207/Breweries.csv"
+Brew <- read.csv(url(BrewCSV))
+
+```
+
+## Reviewing Duplicates
+This highlights the duplicated breweries on the list and finds the information on that is duplicated. 
+```{r exploring dupe data}
+
+Brew$Name[duplicated(Brew$Name)]
+#checking our dataframe, we can identify some duplicates in our dataset. Let's investigate further to see if any need to be removed.
+Brew[Brew$Name=='Blackrocks Brewery',] # appears that flying sailor is a part of the MI blackrocks, so combine them
+Brew[Brew$Name=='Summit Brewing Company',] # both appear to be the same brewery, so combine 159 into 39
+Brew[Brew$Name=='Otter Creek Brewing',] # looks like middlebury is the correct location
+Brew[Brew$Name=='Sly Fox Brewing Company',] # this appears to be two actual locations of the same brewery, so let's leave as is, same state
+Brew[Brew$Name=='Blue Mountain Brewery',] #appears to be two locations of the same brewery. Keep as is for now, same state
+Brew[Brew$Name=='Lucette Brewing Company',] # looks like the correct spelling of the city is Monomonie, so we'll need to change the other
+Brew[Brew$Name=='Oskar Blues Brewery',] #looks like the correct location is longmont
+
+
+```
+
+## Tidying our data
+We are merging the Brewery and Beer data by the Brewery ID numbers. We corrected some of the identification errors with some of the BrewID numbers and names. 
+```{r combine}
+colnames(Beers)[colnames(Beers)=="Brewery_id"] <- "Brew_ID" #Rename for the same key
+Combined <- merge(Beers, Brew, by = "Brew_ID") # Merge files
+colnames(Combined)[colnames(Combined)=="Name.x"] <- "Beer Name"
+colnames(Combined)[colnames(Combined)=="Name.y"] <- "Brewery_Name"
+
+
+#Combining the duplicate Breweries into one Brew_ID and fixing some data entry issues, proved by Google searches
+Combined[Combined$Brew_ID == '96',"Brew_ID"] <- 13
+Combined$State <- as.character(Combined$State) #refactoring the whole column, so insert should work
+Combined[Combined$Beer_ID == 2449 ,"State"] <- "MI" ## needs work, throwing error 'invalid factor level, NA generated'
+Combined[Combined$Brew_ID == '139',"Brew_ID"] <- 59
+Combined[Combined$Beer_ID == 2352 ,"City"] <- "St. Paul"
+Combined[Combined$Brew_ID == '262',"Brew_ID"] <- 276
+Combined[Combined$Brew_ID == 276 ,"City"] <- "Middlebury"
+Combined[Combined$Brew_ID == '378',"Brew_ID"] <- 457
+Combined$City <- as.character(Combined$City) #refactoring the whole column, so insert should work
+Combined[Combined$Beer_ID == 1571 ,"City"] <- "Menomonie"
+Combined[Combined$Brew_ID == '504',"Brew_ID"] <- 167
+Combined[Combined$Brew_ID == 167 ,"City"] <- "Longmont" 
+
+
+n_distinct(Combined$Brew_ID) #Counting Breweries
+n_distinct(Combined$Beer_ID) #Counting # of Beers
+```
+
+## Breweries per state
+Utilizing R Code, we group the breweries by the state and count how many microbrews are present in each. Our code creates plots of the brewery by state into a bar graph for better visibility.
+
+Now that our data is clean, let's start looking at the number of Breweries by State. Looking at the data holistically, we can see that there is quite a range of breweries by state in the US. The most being Colorado with more than 45 and the least being a tie between Washington DC, North Dakota, South Dakota and West Virginia. 
+
+```{r Questions}
+BreweryByState <- Combined %>% group_by(State) %>%dplyr::summarise(StateCount = n_distinct(Brew_ID))
+BreweryByState <- BreweryByState[order(-BreweryByState$StateCount),] 
+
+#Subsetting the data into top/bottoms
+Top10 = subset(BreweryByState[1:10,])
+Bottom10 = subset(BreweryByState[42:51,])
+
+#Top 10 Graph
+ggplot(Top10, aes(x=reorder(State,-StateCount),y=StateCount,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Number of Breweries", title = "Top 10 States With The Most Breweries") 
+
+#Bottom 10 Graph
+ggplot(Bottom10, aes(x=reorder(State,-StateCount),y=StateCount,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Number of Breweries", title = "Bottom 10 States With The Least Breweries")
+
+# full plot
+#ggplot(BreweryByState, aes(x=reorder(State,-StateCount),y=StateCount,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Number of Breweries", title = "Top States With The Most Breweries") 
+##data check for 558
+#sum(BreweryByState$StateCount) 
+```
+
+
+## Reviewing nature of our combined data
+Reviews the top 6 and bottom six lines of data on the combined dataset.
+
+```{r head tail}
+head(Combined,n=6)
+tail(Combined,n=6)
+```
+
+
+## Reporting and Addressing Missing Values
+Next, lets run some R code that helps identify missing values in the combined data set. After reviewing, we can see that there are 1,002 instances of IBU values missing from the data (42% of the total) and 62 instances of the ABV data missing (which is 3% of the total). Reviewing the missing data, we can see it is coming from over 350 breweries across 47 states, so there's no apparent regulation in place for a state to systematically disallow publishing of ABV and IBU.  
+
+In addition, we can see through the means of ABV for the missing data is roughly the same as the mean of the ABV for the available data. So we can't conclude that there is a missing skew of data from the available. So we will remove for the remainder of the analysis.
+
+With 42% of the IBU data missing, we'll have to determine if we can move foward with deleting the files or if there is a legitamate reason for them to be missing. Upon further inquiry from the data source, we can see that the missing data is coming from a random assortment of data, and none of the EDA is suggesting that we would have enough data available to make an accurate prediction of IBU without a high threshold of standard error.
+```{r NAs}
+#How many Nulls in each column
+colSums(is.na(Combined))
+
+#What is the percent of Total for IBU/ABV
+nrow(Beers) #2410
+nrow(Combined) #2410 full set
+#IBU NA = 1005 __ 42% of data removed
+#ABV NA = 62 __ 3% of data removed
+
+#ABV
+missingABV <- filter(Combined, is.na(Combined$ABV))
+head(missingABV)
+n_distinct(missingABV$Brew_ID) #33 unique breweies
+n_distinct(missingABV$State) # 18 States
+
+
+#IBU
+missingValues <- filter(Combined, is.na(Combined$IBU))
+
+n_distinct(missingValues$Brew_ID) #345 unique breweies
+n_distinct(missingValues$State) #47 States
+
+#What is the Mean ABV of Missing Value data
+MeansMissing <- missingValues %>% dplyr::summarise(MeanABV= mean(ABV, na.rm=TRUE))
+MeansByState <- Combined  %>% dplyr::summarise(MeanABV= mean(ABV, na.rm=TRUE))
+
+MeansByState ## 0.05977342	
+MeansMissing ## 0.05956416
+
+#Combined <- na.exclude(Combined)
+## Callout that there isn't a clear in trend in states omitting IBU, and there isn't a clear trend by ABV percentage, we can only see that certain breweries just don't release the IBU information. 
+
+```
+ 
+
+## States with the highest and lowest ABV and IBU
+This R code is calculating the median ABV per state and the median IBU per state and plotting a graph of the order of performance. For the sake of visualization, we decided that we will only show the top 10 and bottom 10 of median ABV so we can see where the bigger markets for each lie.
+
+Reviewing the data for the top 10 ABV states, we can see that Maine is the highest with the largest alcohol by volume of 6.75%, followed by Colorado and Oklahoma and Florida at over 6%. Colorado is very impressive since they were among the leaders in having the highest number of breweries.
+
+Reviewing the data for the lowest ABV, we can see that Utah and Arkansas has the lowest median at just around 4%. This is not surprising considering the low ABV levels regulated by the government by Utah at the time of the data being published (https://www.sltrib.com/news/politics/2019/03/27/guv-signs-off-so-utahs/).
+
+Looking at bitterness, we can see that Maine is the by-far leader in bitterness among breweries, followed by West Virginia.
+
+Looking at the states with the least bitter beers, we can see that Wisconsin is the lowest with an IBU level of below 20. 
+```{r Medians}
+#What is the median ABV & IBV by State without NAs
+MediansByState <- Combined %>% group_by(State) %>% dplyr::summarise(MedIBU = median(IBU, na.rm=TRUE),MedABV= median(ABV, na.rm=TRUE))
+
+#Subsetting the abv data into top/bottoms
+medabv <- MediansByState %>% arrange(desc(MedABV))
+Top10_Medianabv = subset(medabv[1:10,])
+Bottom10_Medianabv = subset(medabv[41:50,])
+
+#Subsetting the Ibu data into top/bottoms
+medibu <- MediansByState %>% arrange(desc(MedIBU))
+Top10_Medianibu = subset(medibu[1:10,])
+Bottom10_Medianibu = subset(medibu[41:50,])
+
+
+#Top 10 ABV Graph
+ggplot(Top10_Medianabv, aes(x=reorder(State,-MedABV),y=MedABV,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median ABV by State", title = "Top 10 States With The Highest Median ABV") 
+
+#Bottom 10 ABV Graph
+ggplot(Bottom10_Medianabv, aes(x=reorder(State,-MedABV),y=MedABV,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median ABV by State", title = "Bottom 10 States With The Lowest ABVs")
+
+#full plot
+#ggplot(medabv, aes(x=reorder(State,-MedABV),y=MedABV,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median ABV by State", title = "Median ABV by state")
+
+#Top 10 IBU Graph
+ggplot(Top10_Medianibu, aes(x=reorder(State,-MedIBU),y=MedIBU,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median IBU by State", title = "Top 10 States With The Most Bitter Beers") 
+
+#Bottom 10 IBU Graph
+  ggplot(Bottom10_Medianibu, aes(x=reorder(State,-MedIBU),y=MedIBU,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median IBU by State", title = "Bottom 10 States With The Least Bitter Beers")
+  
+#full ibu list  
+#  ggplot(medibu, aes(x=reorder(State,-MedIBU),y=MedIBU,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median IBU by State", title = "Median IBU by State")
+  
+#GraphByState <- MediansByState %>% ggplot(aes(x=State,y=MedABV)) + geom_bar(stat="identity") + coord_flip() #SD doesn't have IBU
+```
+
+
+## Max ABV and IBU
+R Code here takes our combined data frame and sorts by the highest score for ABV and highest Score for IBU.
+
+The state with the highest ABV score for a single beer is Colorado, the home of the Lee Hill Series Volume 5, the Belgian Style Quadrupel Ale, from Upslope Brewing Company in Boulder.
+
+The state with the higest IBU score for a single beer is Oregon, which is home to the Bitter Bitch Imperial IPA out of the Astoria Brewing Company in Astoria, Oregon. 
+
+```{r Question 5}
+#State for max ABV & max IBU
+Combined[which.max(Combined$ABV),]
+Combined[which.max(Combined$IBU),]
+```
+
+## Summary of ABV data
+This R code pulls some of the standard summary statistics related to the ABV data available. 
+
+Reviewing the summary statistics of our ABV distribution, we can see that the range of alcohold in the beer data runs from 2.7 ABV% which, all the way up to 12.8%. Looking at the skew of our data, the mean and median relationship appears to be somewhat left skewed towards lower alcohol contents. 
+
+```{r Question 6}
+#Summary of ABV
+summary(Combined$ABV)
+range(Combined$ABV,na.rm=TRUE)
+mode(Combined$ABV)
+str(Combined$ABV)
+
+```
+
+
+## ABV by IBU relationship
+This R code produces a scatter plot and linear regression line of all our beer data with IBU as the response variable and ABV as the horizontal axis. In addition, our code performs a correlation test and runs a linear regression model based on teh ABV and IBU to detirmine if there is a significant relationship.
+
+Looking at the findings from the linear regression, we can see there is a positive correlation between IBU and ABV at the p value of < 0.001, for every increase in percentage points in alcohol by volume, we can see a 0.0003 percentage point increase in IBU. This would suggest that we will be able to accurately predict the bitterness of a beer based on the alcohol level of the beer. 
+
+As a bonus, we did a scatter plot of the predicted IBU value (since IBU was missing in 40% of our data) using our linear predicted values. Since our regression line includes state as a factor in predicting IBU (since we saw some trends with bitterness and state), we can factor that into our trend line to make some interesting variance around the regression line.
+
+For the sake of fun, lets see how our bitterness chart of our predicted data compares to the real data.
+```{r Question 7}
+#Is there an apparent relationship between the bitterness of the beer and its alcoholic content? 
+#Scatter <- ggplot(Combined, aes(x=ABV, y=IBU)) + geom_point()
+#Scatter
+cor.test(Combined$ABV,Combined$IBU) #P value is very low, Rejecting the null hypothesis saying that there is not a coorrelation. Pvalue is less than 0.001.
+
+mylm <- lm(Combined$ABV~Combined$IBU, data = Combined)
+
+summary(mylm)
+
+#run a regression using state and ABV as predictors
+reg <- lm(IBU ~ ABV + State, data = Combined)
+
+summary(reg)
+
+#plot of real ABV and IBU data
+plot(ABV ~ IBU, data = Combined, main = "IBU vs ABV", xlab= 'ABV', ylab = 'IBU') + abline(reg, col="blue")
+
+
+## let's see if we can use our regression to predict the IBU per state
+#create a new variable for combined
+Combine1 <- Combined
+
+Combine1 <- Combine1[!Combine1$State==' SD',]
+Combine1 <- Combine1[!Combine1$Brewery_Name=='Blackrocks Brewery',]
+
+#use fit to predict the value
+Combine2 <- Combine1 %>% mutate(pred = predict(reg, .)) %>%
+  #Replace NA with pred in IBU
+  mutate (IBU = ifelse(is.na(IBU), pred, IBU))
+
+Combine2 %>% as.data.frame()
+
+
+
+#plot of ABV and predicted IBU data
+plot(ABV ~ pred, data = Combine2, main = "Pred IBU vs ABV", xlab= 'ABV', ylab = 'Pred IBU') + abline(reg, col="blue")
+
+#let's see if we can fill in the NA data using 
+
+```  
+
+#Median ABV & IBU by State
+This code basically repeats the datastep above.
+
+Re-reviewing the IBU bitterness top 10 and bottom 10, we can see that New Hampshire is now the state with the bitterest beer followed by West Virginia and New Mexico with the Bitterest Beers.That said, from the bottom of our list, UTAH is still the least bitter beer state.
+
+```{r Predicted Medians}
+#What is the median ABV & IBU by State without NAs
+MediansByState2 <- Combine2 %>% group_by(State) %>% dplyr::summarise(MedIBUp = median(pred, na.rm=TRUE),MedABV= median(ABV, na.rm=TRUE))
+
+#Subsetting the Ibu data into top/bottoms
+medibu2 <- MediansByState2 %>% arrange(desc(MedIBUp))
+Top10_Medianibu2 = subset(medibu2[1:10,])
+Bottom10_Medianibu2 = subset(medibu2[41:50,])
+
+
+#Top 10 IBU Graph
+ggplot(Top10_Medianibu2, aes(x=reorder(State,-MedIBUp),y=MedIBUp,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y=" Predicted Median IBU by State", title = "Top 10 States With The Most Bitter Beers") 
+
+#Bottom 10 IBU Graph
+  ggplot(Bottom10_Medianibu2, aes(x=reorder(State,-MedIBUp),y=MedIBUp,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Predicted Median IBU by State", title = "Bottom 10 States With The Least Bitter Beers")
+  
+#full ibu list  
+#  ggplot(medibu, aes(x=reorder(State,-MedIBU),y=MedIBU,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median IBU by State", title = "Median IBU by State")
+  
+#GraphByState <- MediansByState %>% ggplot(aes(x=State,y=MedABV)) + geom_bar(stat="identity") + coord_flip() #SD doesn't have IBU
+```
+
+
+
+## Conclusion
+From the implications to the research question standpoint, if AB Inbev were want to expand to underserved markets for micro-brews, AB would be able to know exactly what bitterness and ABV relationship is common in each market and be able to enter with an offering that will disrupt the current marketplace.
+
+### You can find our published repository on https://github.com/GraceLang1110/SMU_MSDS_Github/tree/master/CaseStudy01
