@@ -405,13 +405,25 @@ $(document).ready(function () {
 <thead>
 <tr>
 <th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
-V1
+Name
 </th>
 <th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
-V2
+Beer_ID
 </th>
 <th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
-V3
+ABV
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+IBU
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Brewery_id
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Style
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Ounces
 </th>
 </tr>
 </thead>
@@ -421,10 +433,22 @@ V3
 factor
 </td>
 <td style="text-align:left;">
-factor
+integer
+</td>
+<td style="text-align:left;">
+numeric
 </td>
 <td style="text-align:left;">
 integer
+</td>
+<td style="text-align:left;">
+integer
+</td>
+<td style="text-align:left;">
+factor
+</td>
+<td style="text-align:left;">
+numeric
 </td>
 </tr>
 </tbody>
@@ -436,11 +460,6 @@ integer
 <div id="beers.csv" class="section level1">
 <h1>Beers.csv</h1>
 <table>
-<colgroup>
-<col width="24%"></col>
-<col width="15%"></col>
-<col width="59%"></col>
-</colgroup>
 <thead>
 <tr class="header">
 <th>Variable</th>
@@ -450,45 +469,76 @@ integer
 </thead>
 <tbody>
 <tr class="odd">
-<td>AttritionCode</td>
-<td align="center">1 or 0</td>
-<td align="right">If Attrition = “Yes”, AttritionCode = 1 and vice versa</td>
+<td>Name</td>
+<td align="center">factor</td>
+<td align="right">Name of individual beer</td>
 </tr>
 <tr class="even">
-<td>OvertimeCode</td>
-<td align="center">1 or 0</td>
-<td align="right">If Overtime = “Yes”, OvertimeCode = 1 and vice versa</td>
+<td>Beer_ID</td>
+<td align="center">integer</td>
+<td align="right">Unique identifier for the individual beer</td>
 </tr>
 <tr class="odd">
-<td>maleperc</td>
-<td align="center">integer</td>
-<td align="right">Percentage of employees that are male from total</td>
+<td>ABV</td>
+<td align="center">numeric</td>
+<td align="right">Alcohol by volume of the beer</td>
 </tr>
 <tr class="even">
-<td>femaleperc</td>
+<td>IBU</td>
 <td align="center">integer</td>
-<td align="right">Percentage of employees that are female from total</td>
+<td align="right">International Bitterness Units of the beer</td>
 </tr>
 <tr class="odd">
-<td>mean_hr</td>
+<td>Brewey_ID</td>
 <td align="center">integer</td>
-<td align="right">Mean Job satisfaction of HR employees</td>
+<td align="right">Brewery ID associated with the individual beer</td>
 </tr>
 <tr class="even">
-<td>mean_non_hr</td>
-<td align="center">integer</td>
-<td align="right">Mean Job satisfaction of Non-HR employees</td>
+<td>Style</td>
+<td align="center">factor</td>
+<td align="right">Style of the beer</td>
 </tr>
 <tr class="odd">
-<td>jobroleAttritionRates</td>
-<td align="center">data.frame</td>
-<td align="right">A data frame containing attrition rates per job role</td>
+<td>Ounces</td>
+<td align="center">numeric</td>
+<td align="right">Ounces of beer</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div id="breweries.csv" class="section level1">
 <h1>Breweries.csv</h1>
+<table>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th align="center">Values</th>
+<th align="right">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Brew_ID</td>
+<td align="center">integer</td>
+<td align="right">Unique identifier of the brewery</td>
+</tr>
+<tr class="even">
+<td>Name</td>
+<td align="center">factor</td>
+<td align="right">Name of the brewery</td>
+</tr>
+<tr class="odd">
+<td>City</td>
+<td align="center">factor</td>
+<td align="right">City where the brewery is located</td>
+</tr>
+<tr class="even">
+<td>State</td>
+<td align="center">factor</td>
+<td align="right">U.S. State where the brewery is located</td>
+</tr>
+</tbody>
+</table>
 <div id="test-models" class="section level3">
 <h3>Test Models</h3>
 <p>A number of test models were created to help identify features provided in the data set that contribute to Attrition rates within the population.</p>

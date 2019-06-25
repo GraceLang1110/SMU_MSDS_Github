@@ -21,8 +21,11 @@ This codebook provides an overview of the data as it was received and any modifi
 DDSAnalytics provided our consulting group with a Comma Delimited File (.csv) file titled Beers.csv & Breweries.csv. 
 
 ```{r data import}
-URL <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%205/yob2016.txt"
-df <- read.table(URL,sep=";")
+BeersCSV <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%207/Beers.csv"
+Beers <- read.csv(url(BeersCSV))
+
+BrewCSV <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%207/Breweries.csv"
+Brew <- read.csv(url(BrewCSV))
 
 ```
 
@@ -32,7 +35,7 @@ The data contained within the provided table has the following variable names an
 <br>
 
 ```{r}
-kable(t(lapply(df,class)))%>%
+kable(t(lapply(Beers,class)))%>%
   kable_styling()%>%
   scroll_box(height = 100, width = 500)
 ```
@@ -43,15 +46,22 @@ Derived variables include:
 
 | Variable              | Values        | Purpose                                                |
 |-----------------------|:-------------:|-------------------------------------------------------:|
-| AttritionCode         | 1 or 0        | If Attrition = "Yes", AttritionCode = 1 and vice versa |
-| OvertimeCode          | 1 or 0        | If Overtime = "Yes", OvertimeCode = 1 and vice versa   |
-| maleperc              | integer       | Percentage of employees that are male from total       |
-| femaleperc            | integer       | Percentage of employees that are female from total     |
-| mean_hr               | integer       | Mean Job satisfaction of HR employees                  |
-| mean_non_hr           | integer       | Mean Job satisfaction of Non-HR employees              |
-| jobroleAttritionRates | data.frame    | A data frame containing attrition rates per job role   | 
+| Name         | factor        | Name of individual beer |
+| Beer_ID          | integer        | Unique identifier for the individual beer   |
+| ABV              | numeric       | Alcohol by volume of the beer       |
+| IBU            | integer       | International Bitterness Units of the beer     |
+| Brewey_ID               | integer       | Brewery ID associated with the individual beer                  |
+| Style           | factor       | Style of the beer             |
+| Ounces | numeric    | Ounces of beer   | 
 
 # Breweries.csv
+
+| Variable              | Values        | Purpose                                                |
+|-----------------------|:-------------:|-------------------------------------------------------:|
+| Brew_ID        | integer        | Unique identifier of the brewery |
+| Name          | factor        | Name of the brewery  |
+| City             | factor       | City where the brewery is located       |
+| State            | factor       | U.S. State where the brewery is located     |
 
 ### Test Models
 
