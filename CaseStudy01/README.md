@@ -1,8 +1,8 @@
 # MSDS 6306
-SMU Doing Data Science
-Last Revised 6/25/2019
+*SMU Doing Data Science
+*Last Revised 6/25/2019
 
-# This Repository is for the Anheuser-Busch InBev Nationwide distillery Analysis
+# This Repository is for the Anheuser-Busch InBev Nationwide Distillery Analysis
 
 ## Introduction
 U.S. Beer Market is growing more saturated with small-scale breweries taking more market share and shelf space from the National Domestic Beer Manufacturers. Newer brands are covering the spectrum of bitterness and gravity size, and they are beginning to spread across the country. As AB Inbev is looking to test the waters in the craft brew space, understanding the local trends with these factors may help open market deficiencies as well as locations that may enjoy a bitter beer over others. This information can help guide AB Inbev with insight to opening new chains of micro-brews around the country.
