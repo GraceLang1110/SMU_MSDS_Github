@@ -5,7 +5,7 @@ date: "6/15/2019"
 output: html_document
 ---
 
-# Anheuser-Busch InBev Nationwide distillery Analysis
+# Anheuser-Busch InBev Nationwide Distillery Analysis
 
 ## Introduction
 U.S. Beer Market is growing more saturated with small-scale breweries taking more market share and shelf space from the National Domestic Beer Manufacturers. Newer brands are covering the spectrum of bitterness and gravity size, and they are beginning to spread across the country. As AB Inbev is looking to test the waters in the craft brew space, understanding the local trends with these factors may help open market deficiencies as well as locations that may enjoy a bitter beer over others. This information can help guide AB Inbev with insight to opening new chains of micro-brews around the country. 
@@ -89,13 +89,13 @@ Top10 = subset(BreweryByState[1:10,])
 Bottom10 = subset(BreweryByState[42:51,])
 
 #Top 10 Graph
-ggplot(Top10, aes(x=reorder(State,-StateCount),y=StateCount,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Number of Breweries", title = "Top 10 States With The Most Breweries") 
+ggplot(Top10, aes(x=reorder(State,-StateCount),y=StateCount,fill=State) ) + geom_bar(stat = "identity") + theme_minimal() + theme(axis.text.x = element_text(angle=90),plot.title = element_text(hjust=0.5)) + labs(x="State", y="Number of Breweries", title = "Top 10 States With The Most Breweries") 
 
 #Bottom 10 Graph
-ggplot(Bottom10, aes(x=reorder(State,-StateCount),y=StateCount,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Number of Breweries", title = "Bottom 10 States With The Least Breweries")
+ggplot(Bottom10, aes(x=reorder(State,-StateCount),y=StateCount,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(axis.text.x = element_text(angle=90),plot.title = element_text(hjust=0.5)) + labs(x="State", y="Number of Breweries", title = "Bottom 10 States With The Least Breweries")
 
 # full plot
-#ggplot(BreweryByState, aes(x=reorder(State,-StateCount),y=StateCount,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Number of Breweries", title = "Top States With The Most Breweries") 
+#ggplot(BreweryByState, aes(x=reorder(State,-StateCount),y=StateCount,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(axis.text.x = element_text(angle=90, size=7),plot.title = element_text(hjust=0.5)) + labs(x="State", y="Number of Breweries", title = "Top States With The Most Breweries") 
 ##data check for 558
 #sum(BreweryByState$StateCount) 
 ```
@@ -178,22 +178,22 @@ Bottom10_Medianibu = subset(medibu[41:50,])
 
 
 #Top 10 ABV Graph
-ggplot(Top10_Medianabv, aes(x=reorder(State,-MedABV),y=MedABV,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median ABV by State", title = "Top 10 States With The Highest Median ABV") 
+ggplot(Top10_Medianabv, aes(x=reorder(State,-MedABV),y=MedABV,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(axis.text.x = element_text(angle=90),plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median ABV by State", title = "Top 10 States With The Highest Median ABV") 
 
 #Bottom 10 ABV Graph
-ggplot(Bottom10_Medianabv, aes(x=reorder(State,-MedABV),y=MedABV,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median ABV by State", title = "Bottom 10 States With The Lowest ABVs")
+ggplot(Bottom10_Medianabv, aes(x=reorder(State,-MedABV),y=MedABV,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(axis.text.x = element_text(angle=90),plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median ABV by State", title = "Bottom 10 States With The Lowest ABVs")
 
 #full plot
-#ggplot(medabv, aes(x=reorder(State,-MedABV),y=MedABV,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median ABV by State", title = "Median ABV by state")
+#ggplot(medabv, aes(x=reorder(State,-MedABV),y=MedABV,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(axis.text.x = element_text(angle=90,size=7),plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median ABV by State", title = "Median ABV by State")
 
 #Top 10 IBU Graph
-ggplot(Top10_Medianibu, aes(x=reorder(State,-MedIBU),y=MedIBU,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median IBU by State", title = "Top 10 States With The Most Bitter Beers") 
+ggplot(Top10_Medianibu, aes(x=reorder(State,-MedIBU),y=MedIBU,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(axis.text.x = element_text(angle=90),plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median IBU by State", title = "Top 10 States With The Most Bitter Beers") 
 
 #Bottom 10 IBU Graph
-  ggplot(Bottom10_Medianibu, aes(x=reorder(State,-MedIBU),y=MedIBU,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median IBU by State", title = "Bottom 10 States With The Least Bitter Beers")
+  ggplot(Bottom10_Medianibu, aes(x=reorder(State,-MedIBU),y=MedIBU,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(axis.text.x = element_text(angle=90),plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median IBU by State", title = "Bottom 10 States With The Least Bitter Beers")
   
 #full ibu list  
-#  ggplot(medibu, aes(x=reorder(State,-MedIBU),y=MedIBU,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median IBU by State", title = "Median IBU by State")
+ #ggplot(medibu, aes(x=reorder(State,-MedIBU),y=MedIBU,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(axis.text.x = element_text(angle=90,size=7),plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median IBU by State", title = "Median IBU by State")
   
 #GraphByState <- MediansByState %>% ggplot(aes(x=State,y=MedABV)) + geom_bar(stat="identity") + coord_flip() #SD doesn't have IBU
 ```
@@ -257,23 +257,21 @@ plot(ABV ~ IBU, data = Combined, main = "IBU vs ABV", xlab= 'ABV', ylab = 'IBU')
 ## let's see if we can use our regression to predict the IBU per state
 #create a new variable for combined
 Combine1 <- Combined
-
 Combine1 <- Combine1[!Combine1$State==' SD',]
 Combine1 <- Combine1[!Combine1$Brewery_Name=='Blackrocks Brewery',]
 
 #use fit to predict the value
 Combine2 <- Combine1 %>% mutate(pred = predict(reg, .)) %>%
-  #Replace NA with pred in IBU
-  mutate (IBU = ifelse(is.na(IBU), pred, IBU))
+  mutate (IBU = ifelse(is.na(IBU), pred, IBU)) #Replace NA with pred in IBU
 
-Combine2 %>% as.data.frame()
+Combine3 <- Combine2 %>% as.data.frame()
 
 
 
 #plot of ABV and predicted IBU data
-plot(ABV ~ pred, data = Combine2, main = "Pred IBU vs ABV", xlab= 'ABV', ylab = 'Pred IBU') + abline(reg, col="blue")
+plot(ABV ~ pred, data = Combine3, main = "Pred IBU vs ABV", xlab= 'ABV', ylab = 'Pred IBU') + abline(reg, col="blue")
 
-#let's see if we can fill in the NA data using 
+# To verify our initial regression line, we leverage a forecast regression line and can see a similar output for the trend. As the IBU increases so does the ABV. 
 
 ```  
 
@@ -293,10 +291,10 @@ Bottom10_Medianibu2 = subset(medibu2[41:50,])
 
 
 #Top 10 IBU Graph
-ggplot(Top10_Medianibu2, aes(x=reorder(State,-MedIBUp),y=MedIBUp,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y=" Predicted Median IBU by State", title = "Top 10 States With The Most Bitter Beers") 
+ggplot(Top10_Medianibu2, aes(x=reorder(State,-MedIBUp),y=MedIBUp,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(axis.text.x = element_text(angle=90),plot.title = element_text(hjust=0.5)) + labs(x="State", y=" Predicted Median IBU by State", title = "Top 10 States With The Most Bitter Beers") 
 
 #Bottom 10 IBU Graph
-  ggplot(Bottom10_Medianibu2, aes(x=reorder(State,-MedIBUp),y=MedIBUp,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Predicted Median IBU by State", title = "Bottom 10 States With The Least Bitter Beers")
+  ggplot(Bottom10_Medianibu2, aes(x=reorder(State,-MedIBUp),y=MedIBUp,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(axis.text.x = element_text(angle=90),plot.title = element_text(hjust=0.5)) + labs(x="State", y="Predicted Median IBU by State", title = "Bottom 10 States With The Least Bitter Beers")
   
 #full ibu list  
 #  ggplot(medibu, aes(x=reorder(State,-MedIBU),y=MedIBU,fill=State)) + geom_bar(stat = "identity") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="State", y="Median IBU by State", title = "Median IBU by State")
