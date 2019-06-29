@@ -581,7 +581,7 @@ factor
 </div>
 <div id="data-cleaning" class="section level3">
 <h3>Data Cleaning</h3>
-<p>The two tables can be joined on Beers.Brewery_ID and Breweries.Brew_ID. There are a handful of breweries that have duplicate name and different Brewery ID. They can be identified and resolved with the following code.</p>
+<p>The two tables can be joined on Beers.Brewery_ID and Breweries.Brew_ID. There are a handful of breweries that have duplicate name and different Brewery ID. They can be identified and resolved with the following code. After an analysis, we found that there were missing 40% of the Beer’s IBU data and 3% of the Beers ABV data.</p>
 <pre><code>## [1] Blackrocks Brewery      Summit Brewing Company  Otter Creek Brewing    
 ## [4] Sly Fox Brewing Company Blue Mountain Brewery   Lucette Brewing Company
 ## [7] Oskar Blues Brewery    
@@ -608,6 +608,33 @@ factor
 ## 167     167 Oskar Blues Brewery Longmont    CO
 ## 504     504 Oskar Blues Brewery    Lyons    CO</code></pre>
 </div>
+</div>
+<div id="variable-names" class="section level1">
+<h1>Variable Names</h1>
+<p>Below is an overview of the Variables used in the dataset</p>
+<p>BeersCSV - Read in of Beers Dataset provided by the client<br />
+BrewCSV - Read in of the Breweries Dataset provided by the client<br />
+Combined - Combination of Brew and Beer dataset on the Brewery ID number<br />
+BreweryByState - Grouping of the number of breweries by the state in the dataset<br />
+- Top10 - top ten breakout of the BreweryByState dataset<br />
+- Bottom10 - bottom ten breakout of the BreweryByState dataset<br />
+missingValues - filter of missing IBU data in our set<br />
+MeansMissing - calculation of the mean of the missing data by ABV<br />
+MeansByState - calculation of the mean ABV of the whole dataset<br />
+medabv - median alcohol volumne by state<br />
+Top10_Medianabv - top 10 of the median alcohol volumes by state<br />
+Bottom10_Medianabv - Bottom 10 list of alcohol volumes by state<br />
+medibu - median list of IBU by state<br />
+Top10_Medianibu - top 10 list of median IBUs by state<br />
+Bottom10_Medianibu - bottom 10 list of median IBUs by state<br />
+mylm - linear regression procedure of our dataset<br />
+reg - regression procedure by ABV and State<br />
+Combine1 - cleaning procedure for regression line<br />
+Combine2 - fit of new regression procedure<br />
+Combine3 - create a dataframe of our regression prediction<br />
+medibu2 - median IBU by line based on our predicted IBU dataset<br />
+- Top10_Medianibu2 - Top 10 list of median IBU by state<br />
+- Bottom10_Medianibu2 - Bottom 10 list of median IBU by state</p>
 </div>
 
 

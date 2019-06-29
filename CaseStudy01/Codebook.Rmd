@@ -81,7 +81,7 @@ kable(t(lapply(Brew,class)))%>%
 
 ### Data Cleaning
 
-The two tables can be joined on Beers.Brewery_ID and Breweries.Brew_ID. There are a handful of breweries that have duplicate name and different Brewery ID. They can be identified and resolved with the following code. 
+The two tables can be joined on Beers.Brewery_ID and Breweries.Brew_ID. There are a handful of breweries that have duplicate name and different Brewery ID. They can be identified and resolved with the following code. After an analysis, we found that there were missing 40% of the Beer's IBU data and 3% of the Beers ABV data.
 
 ```{r}
 Brew$Name[duplicated(Brew$Name)]
@@ -118,4 +118,33 @@ Combined[Combined$Brew_ID == '504',"Brew_ID"] <- 167
 Combined[Combined$Brew_ID == 167 ,"City"] <- "Longmont" 
 
 ```
+
+
+# Variable Names
+
+Below is an overview of the Variables used in the dataset
+
+BeersCSV - Read in of Beers Dataset provided by the client    
+BrewCSV - Read in of the Breweries Dataset provided by the client    
+Combined - Combination of Brew and Beer dataset on the Brewery ID number    
+BreweryByState - Grouping of the number of breweries by the state in the dataset    
+- Top10 - top ten breakout of the BreweryByState dataset    
+- Bottom10 - bottom ten breakout of the BreweryByState dataset    
+missingValues - filter of missing IBU data in our set    
+MeansMissing - calculation of the mean of the missing data by ABV    
+MeansByState - calculation of the mean ABV of the whole dataset    
+medabv - median alcohol volumne by state    
+Top10_Medianabv - top 10 of the median alcohol volumes by state    
+Bottom10_Medianabv - Bottom 10 list of alcohol volumes by state    
+medibu - median list of IBU by state    
+Top10_Medianibu - top 10 list of median IBUs by state    
+Bottom10_Medianibu - bottom 10 list of median IBUs by state    
+mylm - linear regression procedure of our dataset    
+reg - regression procedure by ABV and State    
+Combine1 - cleaning procedure for regression line    
+Combine2 - fit of new regression procedure    
+Combine3 - create a dataframe of our regression prediction    
+medibu2 - median IBU by line based on our predicted IBU dataset    
+- Top10_Medianibu2 - Top 10 list of median IBU by state    
+- Bottom10_Medianibu2 - Bottom 10 list of median IBU by state    
 
