@@ -14,10 +14,11 @@ U.S. Beer Market is growing more saturated with small-scale breweries taking mor
  * Codebook.html - HTML version of description of data for Brews.csv & Breweries.csv
  * CaseStudy_01_Grace_Daniel_Final.Rmd - R Markdown file of data cleaning and analysis
  * CaseStudy_01_Grace_Daniel_Final.html - HTML knit of data cleaning and analysis process
- * .ppt - PowerPoint used in presentation to Anheauser-Busch executive team
+ * DDS_Case_Study1_Daniel_Grace.pdf - PowerPoint used in presentation to Anheauser-Busch executive team
 
 ## Presentation Links:
 Daniel Clark: https://youtu.be/FZIEgmSMxfs 
+Grace Lang: https://youtu.be/YaSSwHE0IHw
 
 ### Authors: Daniel Clark & Grace Lang
 ### Contact info: DanielLClark@smu.edu & GracieL@smu.edu
