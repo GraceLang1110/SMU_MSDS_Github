@@ -251,8 +251,14 @@ reg <- lm(IBU ~ ABV + State, data = Combined)
 summary(reg)
 
 #plot of real ABV and IBU data
-plot(ABV ~ IBU, data = Combined, main = "IBU vs ABV", xlab= 'ABV', ylab = 'IBU') + abline(reg, col="blue")
+#plot(ABV ~ IBU, data = Combined, main = "IBU vs ABV", xlab= 'ABV', ylab = 'IBU') + abline(reg, col="blue")
 
+ggplot(Combined, aes(x=IBU, y=ABV)) +
+    geom_point(shape=1) +    # Use hollow circles
+    geom_smooth(method=lm) + # Add linear regression line 
+    theme_minimal() + 
+    theme(plot.title = element_text(hjust=0.5)) + labs(x="IBU", y="ABV", title = "IBU vs ABV") 
+              
 
 ## let's see if we can use our regression to predict the IBU per state
 #create a new variable for combined
