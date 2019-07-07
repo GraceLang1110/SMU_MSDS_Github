@@ -11,6 +11,7 @@ SMU Summer 19 Doing Data Science Homework
      * Week 6: Rmd, html & csv file
      * Week 7: no homework to upload
      * Week 8: no homework to upload
+     * Week 9: Rmd & HTML file, regression model interpretation
   * Case Study 01: Anheuser Busch Distillery Analysis, see ReadMe for more information
   
 ## You can contact me at GracieL@smu.edu (Grace Lang) in case there are any questions
