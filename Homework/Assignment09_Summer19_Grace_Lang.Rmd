@@ -1,0 +1,76 @@
+---
+title: "Assignment09_Summer19_Grace_Lang"
+author: "Grace Lang"
+date: "7/7/2019"
+output: html_document
+---
+
+# A) Clean and Prepare the data:
+```{r setup, include=FALSE}
+
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(stats)
+
+#Loading the two files
+BeersCSV <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%207/Beers.csv"
+Beers <- read.csv(url(BeersCSV))
+
+BrewCSV <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%207/Breweries.csv"
+Brew <- read.csv(url(BrewCSV))
+
+#Merging the two files
+colnames(Beers)[colnames(Beers)=="Brewery_id"] <- "Brew_ID" #Rename for the same key
+Combined <- merge(Beers, Brew, by = "Brew_ID") # Merge files
+colnames(Combined)[colnames(Combined)=="Name.x"] <- "Beer Name"
+colnames(Combined)[colnames(Combined)=="Name.y"] <- "Brewery_Name"
+
+##Check to see where spaces fall
+#head(paste(Combined$State),5)
+
+#Create a function for trimming states
+trim <- function(x) { gsub("(^[[:space:]]+|[[:space:]]+$)", "", x) }
+Combined_Trimmed <- Combined[,1:9]
+Trimmed_State <- data.frame(State = trim(Combined$State))
+Combined <- cbind(Combined_Trimmed,Trimmed_State)
+
+##Check to ensure spaces are gone
+#head(paste(Combined$State),5)
+
+
+#One dataset with no IBU/NAs and only filter on TX & CO
+beerCOTX <- Combined %>% subset.data.frame(State == c("CO","TX")) %>% arrange(IBU) %>% na.omit()
+
+```
+
+# B) Create an initial plotf of the data
+```{r plot}
+#Plot 
+ggplot(beerCOTX, aes(x=IBU, y=ABV)) +
+    geom_point(shape=1) +    # Use hollow circles
+    facet_grid(rows= vars(State)) +
+    theme_grey() +
+    theme(plot.title = element_text(hjust=0.5)) + labs(x="IBU", y="ABV", title = "IBU vs ABV") 
+
+```
+
+ # C) Model the data
+```{r model}
+#Plot regression line for each state
+beerCO <- subset.data.frame(beerCOTX, State == "CO")
+beerTX <- subset.data.frame(beerCOTX, State == "TX")
+
+regCO <- lm(ABV~IBU, data = beerCO)
+plot(ABV~IBU, data =beerCO, main = "Colorado IBU vs ABV", xlab= 'ABV', ylab = 'IBU') + abline(regCO, col="blue")
+regTX <- lm(ABV~IBU, data = beerTX)
+plot(ABV~IBU, data =beerTX, main = "Texas IBU vs ABV", xlab= 'ABV', ylab = 'IBU') + abline(regTX, col="blue")
+
+#ggplot(beerCOTX, aes(x=IBU, y=ABV)) +
+#    geom_point(shape=1) +    # Use hollow circles
+#    geom_smooth(method = "lm") + 
+#    facet_grid(rows= vars(State)) +
+#    theme_grey() +
+#    theme(plot.title = element_text(hjust=0.5)) + labs(x="IBU", y="ABV", title = "IBU vs ABV") 
+
+```
