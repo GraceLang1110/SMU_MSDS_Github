@@ -1,0 +1,205 @@
+---
+title: "Assignment09_Summer19_Grace_Lang_v2"
+author: "Grace Lang"
+date: "7/8/2019"
+output: html_document
+---
+
+# A1-5) Clean and Prepare the data:
+```{r setup}
+
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(stats)
+library(caret)
+library(rmarkdown)
+library(tinytex)
+
+#Loading the two files
+BeersCSV <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%207/Beers.csv"
+Beers <- read.csv(url(BeersCSV))
+
+BrewCSV <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%207/Breweries.csv"
+Brew <- read.csv(url(BrewCSV))
+
+#Merging the two files
+colnames(Beers)[colnames(Beers)=="Brewery_id"] <- "Brew_ID" #Rename for the same key
+Combined <- merge(Beers, Brew, by = "Brew_ID") # Merge files
+colnames(Combined)[colnames(Combined)=="Name.x"] <- "Beer Name"
+colnames(Combined)[colnames(Combined)=="Name.y"] <- "Brewery_Name"
+
+##Check to see where spaces fall
+#head(paste(Combined$State),5)
+
+#Create a function for trimming states
+trim <- function(x) { gsub("(^[[:space:]]+|[[:space:]]+$)", "", x) }
+Combined_Trimmed <- Combined[,1:9]
+Trimmed_State <- data.frame(State = trim(Combined$State))
+Combined <- cbind(Combined_Trimmed,Trimmed_State)
+
+##Check to ensure spaces are gone
+#head(paste(Combined$State),5)
+
+#One dataset with no IBU/NAs and only filter on TX & CO
+beerCOTX <- Combined %>% subset.data.frame(State == c("CO","TX")) %>% arrange(IBU) %>% na.omit()
+
+```
+
+# B6) Create an initial plot of the data
+```{r plot}
+#Plot 
+ggplot(beerCOTX, aes(x=IBU, y=ABV)) +
+    geom_point(shape=1) +    # Use hollow circles
+    facet_grid(rows= vars(State)) +
+    theme_grey() +
+    theme(plot.title = element_text(hjust=0.5)) + labs(x="IBU", y="ABV", title = "IBU vs ABV") 
+
+```    
+
+# C7) Model the data
+```{r model}
+#Plot regression line for each state
+beerCO <- subset.data.frame(beerCOTX, State == "CO")
+beerTX <- subset.data.frame(beerCOTX, State == "TX")
+
+regCO <- lm(ABV~IBU, data = beerCO)
+plot(ABV~IBU, data =beerCO, main = "Colorado IBU vs ABV", xlab= 'ABV', ylab = 'IBU') + abline(regCO, col="blue")
+
+regTX <- lm(ABV~IBU, data = beerTX)
+plot(ABV~IBU, data =beerTX, main = "Texas IBU vs ABV", xlab= 'ABV', ylab = 'IBU') + abline(regTX, col="blue")
+
+#Faceted GGPlot for reference
+#ggplot(beerCOTX, aes(x=IBU, y=ABV)) +
+#    geom_point(shape=1) +    # Use hollow circles
+#    geom_smooth(method = "lm") + 
+#    facet_grid(rows= vars(State)) +
+#    theme_grey() +
+#    theme(plot.title = element_text(hjust=0.5)) + labs(x="IBU", y="ABV", title = "IBU vs ABV") 
+
+```
+
+## C8) Assumptions of the regression model:    
+     1. There is a normal distribution of the ABV for fixed values of IBU    
+No, the data is right skewed for both TX & CO. There does not appear to be evidence of normal distribution.        
+
+    2. These normal distributions have equal standard deviations.     
+No, based on the residual graph, the residuals do not have a consistent variance.       
+
+    3. The means of these normal distributions have a linear relationship with IBU.    
+There does not appear to be a linear relationship between IBU & ABV for either CO or TX.
+
+    4. Independence (you may assume this one to be true without defense.)     
+The observations are independent of one another for CO & TX.    
+
+
+# D8) Gain inference from the model
+The residuals look like a random cloud; however, they do not seem to have a constant variance.
+
+### 9) Interpret the Slope    
+With the increase in IBU, there is an associated increase in mean ABV by 3.805e-04 for Colorado and an increase in mean ABV by 4.066e-04 for Texas. 
+
+### 9) Is there evidence that the relationship between ABV and IBU is significantly different for Texas and Colorado beers?    
+Both Texas and Colorado have right-skewed distributions; however, based on the outputs there does not seem to be a significant difference between the two.
+
+### 10) Provide a confidence interval for each slope.
+Colorado: The model shows 95% confidence that the associated increase of ABV with an increase in IBU is between 0.00029 and 0.00047.
+
+Texas: The model shows 95% confidence that the associated increase of ABV with an increase in IBU is between 0.00030 and 0.00052.
+
+```{r parameter}
+summary(regCO)
+summary(regTX)
+confint(regCO)
+confint(regTX)
+
+#Each individual residuals for data
+#regCO$resid
+#regTX$resid
+
+#Are the residuals normal
+histogram(regCO$resid)
+histogram(regTX$resid)
+#Do the residuals have a constant variance
+ggplot(regCO, aes(x=.fitted,y=.resid)) +geom_point() + geom_line(aes(y=0))
+ggplot(regTX, aes(x=.fitted,y=.resid)) +geom_point() + geom_line(aes(y=0))
+plot(regCO, which=1:2)
+plot(regTX, which=1:2)
+
+```
+  
+
+# E) Compare two competing models: External Cross Validation
+In both states the linear model has a lower ASE, while the quadratic has a higher ASE, which concludes that the linear model is a better fit for the relationship between IBU and ABV. 
+```{r cross}
+beerCOTX_log = beerCOTX %>% mutate(IBU2 = IBU^2)
+head(beerCOTX_log,5)
+
+beerCO_2 <- subset.data.frame(beerCOTX_log, State == "CO")
+beerTX_2 <- subset.data.frame(beerCOTX_log, State == "TX")
+
+#Training datasets
+set.seed(1)
+
+TrainCO = sample(seq(1,dim(beerCO_2)[1]),round(.60*dim(beerCO_2)[1]),replace = FALSE)
+CO_Train = beerCO_2[TrainCO,]
+#CO_Train
+CO_Test = beerCO_2[-TrainCO,]
+#CO_Test
+
+TrainTX = sample(seq(1,dim(beerTX_2)[1]),round(.60*dim(beerTX_2)[1]),replace = FALSE)
+TX_Train = beerTX_2[TrainTX,]
+#TX_Train
+TX_Test = beerTX_2[-TrainTX,]
+#TX_Test
+
+#degrees of freedom
+#nrow(CO_Train) #43
+#nrow(TX_Train) #27
+
+
+
+#CO linear
+CO_1_fit <- lm(ABV~IBU, data = CO_Train)
+summary(CO_1_fit)
+CO_1_Preds = predict(CO_1_fit, newdata = CO_Test) #going through all the IBUs and pred the ABVs
+CO_1_Preds <- as.data.frame(CO_1_Preds)
+error <- CO_1_Preds - CO_Test$ABV
+square_error <- error^2
+ASE <- sum(square_error)/(43-1) #divided by degrees of freedom
+ASE
+#8.370034e-05
+
+#TX linear
+TX_1_fit = lm(ABV~IBU, data = TX_Train)
+summary(TX_1_fit)
+TX_1_Preds = predict(TX_1_fit, newdata = TX_Test)
+TX_1_Preds <- as.data.frame(TX_1_Preds)
+error <- TX_1_Preds - TX_Test$ABV
+square_error <- error^2
+ASE <- sum(square_error)/(27-1)
+ASE
+#9.15589e-05
+
+#CO log
+CO_2_fit = lm(ABV~IBU2, data = CO_Train)
+summary(CO_2_fit)
+CO_2_Preds = predict(CO_2_fit, newdata = CO_Test)
+CO_2_Preds <- as.data.frame(CO_2_Preds)
+error <- CO_2_Preds - CO_Test$ABV
+square_error <- error^2
+ASE <- sum(square_error)/(43-1)
+ASE
+#8.098769e-05
+
+#TX log
+TX_2_fit = lm(ABV~IBU2, data = TX_Train)
+summary(TX_2_fit)
+TX_2_Preds = predict(TX_2_fit, newdata = TX_Test)
+TX_2_Preds <- as.data.frame(TX_2_Preds)
+error <- TX_2_Preds - TX_Test$ABV
+square_error <- error^2
+ASE <- sum(square_error)/(27-1)
+ASE
+#0.0001050639
+```
