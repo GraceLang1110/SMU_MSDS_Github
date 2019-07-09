@@ -2,16 +2,21 @@
 title: "Assignment09_Summer19_Grace_Lang"
 author: "Grace Lang"
 date: "7/7/2019"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 # A) Clean and Prepare the data:
-```{r setup, include=FALSE}
+```{r setup}
 
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
 library(stats)
+library(caret)
+library(rmarkdown)
+library(tinytex)
 
 #Loading the two files
 BeersCSV <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%207/Beers.csv"
@@ -44,7 +49,7 @@ beerCOTX <- Combined %>% subset.data.frame(State == c("CO","TX")) %>% arrange(IB
 
 ```
 
-# B) Create an initial plotf of the data
+# B) Create an initial plot of the data
 ```{r plot}
 #Plot 
 ggplot(beerCOTX, aes(x=IBU, y=ABV)) +
@@ -55,7 +60,7 @@ ggplot(beerCOTX, aes(x=IBU, y=ABV)) +
 
 ```
 
- # C) Model the data
+# C) Model the data
 ```{r model}
 #Plot regression line for each state
 beerCO <- subset.data.frame(beerCOTX, State == "CO")
@@ -63,9 +68,11 @@ beerTX <- subset.data.frame(beerCOTX, State == "TX")
 
 regCO <- lm(ABV~IBU, data = beerCO)
 plot(ABV~IBU, data =beerCO, main = "Colorado IBU vs ABV", xlab= 'ABV', ylab = 'IBU') + abline(regCO, col="blue")
+
 regTX <- lm(ABV~IBU, data = beerTX)
 plot(ABV~IBU, data =beerTX, main = "Texas IBU vs ABV", xlab= 'ABV', ylab = 'IBU') + abline(regTX, col="blue")
 
+#Faceted GGPlot for reference
 #ggplot(beerCOTX, aes(x=IBU, y=ABV)) +
 #    geom_point(shape=1) +    # Use hollow circles
 #    geom_smooth(method = "lm") + 
@@ -74,3 +81,108 @@ plot(ABV~IBU, data =beerTX, main = "Texas IBU vs ABV", xlab= 'ABV', ylab = 'IBU'
 #    theme(plot.title = element_text(hjust=0.5)) + labs(x="IBU", y="ABV", title = "IBU vs ABV") 
 
 ```
+## Assumptions of the regression model:
+### 1. There is a normal distribution of the ABV for fixed values of IBU
+No, the data is right skewed for both TX & CO
+### 2. These normal distributions have equal standard deviations. 
+No based on the residual graph, the residuals do not have a consistent variance or standard dev
+### 3. The means of these normal distributions have a linear relationship with IBU.  
+### 4. Independence (you may assume this one to be true without defense.)   
+
+
+# D) Gain inference from the model
+```{r parameter}
+summary(regCO)
+summary(regTX)
+
+#Each individual residuals for data
+#regCO$resid
+#regTX$resid
+
+#Are the residuals normal
+histogram(regCO$resid)
+histogram(regTX$resid)
+#Do the residuals have a constant variance
+ggplot(regCO, aes(x=.fitted,y=.resid)) +geom_point() + geom_line(aes(y=0))
+ggplot(regTX, aes(x=.fitted,y=.resid)) +geom_point() + geom_line(aes(y=0))
+par(mfrow = c(2,1))
+plot(regCO, which=1:2)
+plot(regTX, which=1:2)
+#The residuals look like a random cloud; however, they do not seem to have a constant variance.
+
+
+```
+## Interpret the Slope
+
+## Is there evidence that the relationship between ABV and IBU is significantly different for Texas and Colorado beers?  
+### Both Texas and Colorado have right-skewed distributions; however, Colorado is less right-skewed than Texas
+
+# E) Compare two competing models: External Cross Validation
+```{r cross}
+beerCOTX_log = beerCOTX %>% mutate(IBU2 = IBU^2)
+head(beerCOTX_log,5)
+
+beerCO_2 <- subset.data.frame(beerCOTX_log, State == "CO")
+beerTX_2 <- subset.data.frame(beerCOTX_log, State == "TX")
+
+#Training datasets
+set.seed(1)
+
+TrainCO = sample(seq(1,dim(beerCO_2)[1]),round(.60*dim(beerCO_2)[1]),replace = FALSE)
+CO_Train = beerCO_2[TrainCO,]
+CO_Train
+CO_Test = beerCO_2[-TrainCO,]
+CO_Test
+
+TrainTX = sample(seq(1,dim(beerTX_2)[1]),round(.60*dim(beerTX_2)[1]),replace = FALSE)
+TX_Train = beerTX_2[TrainTX,]
+TX_Train
+TX_Test = beerTX_2[-TrainTX,]
+TX_Test
+
+
+#CO linear
+CO_1_fit = lm(ABV~IBU, data = CO_Train)
+summary(CO_1_fit)
+CO_1_Preds = predict(CO_1_fit, newdata = CO_Test)
+as.data.frame(CO_1_Preds)
+error <- CO_1_Preds - CO_Test$IBU
+square_error <- error^2
+ASE <- mean(square_error)
+ASE
+#2286.503
+
+#TX linear
+TX_1_fit = lm(ABV~IBU, data = TX_Train)
+summary(TX_1_fit)
+TX_1_Preds = predict(TX_1_fit, newdata = TX_Test)
+as.data.frame(TX_1_Preds)
+error <- TX_1_Preds - TX_Test$IBU
+square_error <- error^2
+ASE <- mean(square_error)
+ASE
+#1879.79
+
+#CO log
+CO_2_fit = lm(ABV~IBU2, data = CO_Train)
+summary(CO_2_fit)
+CO_2_Preds = predict(CO_2_fit, newdata = CO_Test)
+as.data.frame(CO_2_Preds)
+error <- CO_2_Preds - CO_Test$IBU2
+square_error <- error^2
+ASE <- mean(square_error)
+ASE
+#12817275
+
+#TX log
+TX_2_fit = lm(ABV~IBU2, data = TX_Train)
+summary(TX_2_fit)
+TX_2_Preds = predict(TX_2_fit, newdata = TX_Test)
+as.data.frame(TX_2_Preds)
+error <- TX_2_Preds - TX_Test$IBU2
+square_error <- error^2
+ASE <- mean(square_error)
+ASE
+#7005430
+
+```    
