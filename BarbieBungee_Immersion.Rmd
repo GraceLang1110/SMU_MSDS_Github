@@ -1,0 +1,62 @@
+---
+title: "BarbieBungee_Summer19"
+author: "Grace Lang"
+date: "7/14/2019"
+output: html_document
+---
+
+```{r s,etup, include=FALSE}
+library(ggplot2)
+library(tidyverse)
+
+Bungee <- read.csv("./BarbieBungee.csv",header=TRUE)
+
+```    
+# Create a Scatterplot of the data
+```{r plot}
+ggplot(data = Bungee, aes(x=RubberBand, y=Avg)) + geom_point() + labs(x="Number of Rubber Bands", y="Average Distance Bungeed", title = "Distance vs Number of Bands Bungeed by Barbie") 
+```
+
+# Conduct a hypothesis test to test the claim that the linear correlation coefficient / slope is different than zero.
+
+```{r hypothesis}
+#cor <- cor.test(Bungee$RubberBand, Bungee$Avg)
+#cor
+
+lm <- lm(data = Bungee, Avg ~ RubberBand)
+summary(lm)
+```
+
+# Find the confidence Interval of the slope
+```{r confidence}
+confint(lm) 
+```    
+
+```{r additional measurement}
+Bungee_2 <- read.csv("./BarbieBungee_v2.csv",header=TRUE)
+
+lm2 <- lm(data = Bungee_2, Avg ~ RubberBand)
+summary(lm2)
+
+
+ggplot(data = Bungee_2, aes(x=RubberBand, y=Avg)) + geom_point() + labs(x="Number of Rubber Bands", y="Average Distance Bungeed", title = "Distance vs Number of Bands Bungeed by Barbie with Regression") + geom_smooth(method="lm")
+```
+
+
+``` {r calc}
+Distance <-  (18*12)+9
+Rubber <- (Distance - 5.6727)/3.9580
+
+Rubber
+````
+
+```{r bonus}
+#Predicting the 14th rubberband
+new_predict <- data.frame(Avg=NA, RubberBand=14)
+predict(lm, new_predict, interval='prediction', level=0.95)
+
+#Will we hit Barbie's head on the concrete
+Full_length <- data.frame(Avg=NA, RubberBand=55)
+predict(lm, Full_length, interval='prediction', level=0.95)
+```
+
