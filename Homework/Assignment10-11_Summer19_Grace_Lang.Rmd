@@ -1,0 +1,73 @@
+---
+title: "Assignment10-11_Summer19_Grace_Lang"
+author: "Grace Lang"
+date: "7/17/2019"
+output: html_document
+---
+
+# A1-5) Clean and Prepare the data:
+```{r setup}
+
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(stats)
+library(caret)
+library(rmarkdown)
+library(class)
+
+#Loading the two files
+BeersCSV <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%207/Beers.csv"
+Beers <- read.csv(url(BeersCSV))
+
+BrewCSV <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%207/Breweries.csv"
+Brew <- read.csv(url(BrewCSV))
+
+#Merging the two files
+colnames(Beers)[colnames(Beers)=="Brewery_id"] <- "Brew_ID" #Rename for the same key
+Combined <- merge(Beers, Brew, by = "Brew_ID") # Merge files
+colnames(Combined)[colnames(Combined)=="Name.x"] <- "Beer Name"
+colnames(Combined)[colnames(Combined)=="Name.y"] <- "Brewery_Name"
+
+##Check to see where spaces fall
+#head(paste(Combined$State),5)
+
+#Create a function for trimming states
+trim <- function(x) { gsub("(^[[:space:]]+|[[:space:]]+$)", "", x) }
+Combined_Trimmed <- Combined[,1:9]
+Trimmed_State <- data.frame(State = trim(Combined$State))
+Combined <- cbind(Combined_Trimmed,Trimmed_State)
+
+##Check to ensure spaces are gone
+#head(paste(Combined$State),5)
+
+#One dataset with no IBU/NAs and only filter on TX & CO
+beerCOTX <- Combined %>% subset.data.frame(State == c("CO","TX")) %>% arrange(IBU) %>% na.omit()
+
+```
+
+# B8-12 External Cross Validation
+Create a test training dataset for Texas & print summaries
+```{r ECV}
+beerTX <- subset.data.frame(beerCOTX, State == "TX")
+set.seed(2)
+TrainTX = sample(seq(1,dim(beerTX)[1]),round(.60*dim(beerTX)[1]),replace = FALSE)
+#TX_Train
+Training_TX = beerTX[TrainTX,]
+#TX_Test
+Test_TX = beerTX[-TrainTX,]
+
+summary(Training_TX)
+summary(Test_TX)
+```    
+
+Using the training dat, fit a KNN regression model to predict ABV from IBU.  You should use the knnreg function in the caret package.  Fit two separate models: one with k = 3 and one with k = 5.  (This is 2 models total.)
+```{r knn}
+KNN3 <- knnregTrain(train = Training_TX, test = Test_TX, IBU~ABV, k=3)
+
+```    
+
+
+
+
+
