@@ -15,6 +15,7 @@ library(stats)
 library(caret)
 library(rmarkdown)
 library(class)
+library(mltools)
 
 #Loading the two files
 BeersCSV <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%207/Beers.csv"
@@ -50,24 +51,98 @@ beerCOTX <- Combined %>% subset.data.frame(State == c("CO","TX")) %>% arrange(IB
 Create a test training dataset for Texas & print summaries
 ```{r ECV}
 beerTX <- subset.data.frame(beerCOTX, State == "TX")
-set.seed(2)
+set.seed(7)
 TrainTX = sample(seq(1,dim(beerTX)[1]),round(.60*dim(beerTX)[1]),replace = FALSE)
 #TX_Train
 Training_TX = beerTX[TrainTX,]
 #TX_Test
 Test_TX = beerTX[-TrainTX,]
 
+#LTest_TX<- length(Test_TX)
+#LTraining_TX <- length(Training_TX)
+
+#perc_test <- LTest_TX / (LTraining_TX+LTest_TX)
+#perc_train<- LTraining_TX / (LTraining_TX+LTest_TX)
+
+#perc_train
+#perc_test
+
 summary(Training_TX)
 summary(Test_TX)
 ```    
 
-Using the training dat, fit a KNN regression model to predict ABV from IBU.  You should use the knnreg function in the caret package.  Fit two separate models: one with k = 3 and one with k = 5.  (This is 2 models total.)
+Using the training data, fit a KNN regression model to predict ABV from IBU.  You should use the knnreg function in the caret package.  Fit two separate models: one with k = 3 and one with k = 5.  (This is 2 models total.)
 ```{r knn}
-KNN3 <- knnregTrain(train = Training_TX, test = Test_TX, IBU~ABV, k=3)
+#KNN3 <- knnreg(IBU~ABV, data = Training_TX, k=3)
+#summary(KNN3)
+#KNN3
+#plot(Test_TX$ABV ,predict(KNN3,Test_TX$IBU))
+#model1 <- knn(train = Training_TX, test = Test_TX, cl= Training_TX$IBU, k=30)
+#fit <- knnreg(Training_TX$IBU, Training_TX$ABV, k=3)
+#plot(Test_TX$ABV ,predict(fit,Test_TX$IBU))
+#KNN3 <- knnregTrain(Training_TX[,c(4:5)], Test_TX[,c(4:5)], Training_TX$IBU, k=3)
+#predict(KNN3, Test_TX)
+##plot(Test_TX ,predict(KNN3,Test_TX))
+
+#Setting up two KNN reg 
+set.seed(7)
+plot(Training_TX$IBU, Training_TX$ABV, main = "KNN frame")
+knn3 <- knnreg(ABV~IBU, data = Training_TX, k=3)
+knn5 <- knnreg(ABV~IBU, data = Training_TX, k=5)
+
+predict3 <- predict(knn3, Test_TX)
+predict5 <- predict(knn5, Test_TX)
+
+
+```
+Use the ASE loss function and external cross validation to provide evidence as to which model (k = 3 or k = 5) is more appropriate.
+```{r ASE}
+ase3 <- mse(predict3, Test_TX$ABV)
+ase5 <- mse(predict5, Test_TX$ABV)
+
+ase3
+ase5
+```
+In this example the k = 5 model has the better fit because of the lower ASE of 4.172047e-05 versus the k = 3 model which had a result of 5.225094e-05. 
+
+```{r automated version of B9}
+set.seed(7)
+#Setting the number of times we will train our KNN
+trainMethod <- trainControl(method = "repeatedcv",
+                            number = 10,
+                            repeats = 3)
+
+#training multiple KNNs to see which K has the best fit
+knn_fit <- train(IBU ~ ., 
+                 data = Training_TX, 
+                 method = "knn",
+                 trControl = trainMethod,
+                 preProcess = c("center", "scale"),
+                 tuneLength = 10)
+knn_fit
+plot(knn_fit)
+
+#predict using test dataset
+predict_test <- predict(knn_fit, newdata = Test_TX)
+predict_test
 
 ```    
+Now use the ASE loss function and external cross validation to provide evidence as to which model (the linear regression model from last week or the “best” KNN regression model from this week (from question 10)) is more appropriate. 
 
 
+Use your “best” KNN regression model to predict the ABV for an IBU of 150, 170 and 190.  What issue do you see with using KNN to extrapolate?    
+```{r predicting values}
+PredictValues <- data.frame(IBU = c(150,170,190))
 
+PredictValues$ABV_Predict <- predict(knn5, PredictValues)
+PredictValues
 
+```
+The issue that arises when using KNN to predict ABV is that the predictions are all identical. 
+
+## KNN Classification
+Filter the beerCOTX dataframe for only beers that are from Texas and are American IPA and American Pale Ale. 
+Divide this filtered data set into a training and test set (60/40, training / test split).
+```{r filter data}
+beerClass <- subset.data.frame(beerTX, Style == c("American Pale Ale (APA)", "American IPA"))
 
