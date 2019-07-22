@@ -34,7 +34,8 @@ library(jsonlite)
 library(dplyr)
 library(tidyverse)
 
-NYTIMES_KEY = "XgmxCXrbgYfaHASBsn31GXWLsVjTzJuo" #Your Key Here … get from NTY API website
+key_set("MY_FAKE_TOKEN")
+NYTIMES_KEY <- key_get("MY_FAKE_TOKEN")
 
 # Let's set some parameters
 term <- "Central+Park+Jogger" # Need to use + to string together separate words
