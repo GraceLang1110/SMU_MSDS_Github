@@ -58,14 +58,9 @@ Training_TX = beerTX[TrainTX,]
 #TX_Test
 Test_TX = beerTX[-TrainTX,]
 
-#LTest_TX<- length(Test_TX)
-#LTraining_TX <- length(Training_TX)
-
-#perc_test <- LTest_TX / (LTraining_TX+LTest_TX)
-#perc_train<- LTraining_TX / (LTraining_TX+LTest_TX)
-
-#perc_train
-#perc_test
+#Check to see if it pulled 60/40% 
+#dim(Training_TX) 27 10 
+#dim(Test_TX) 18 10
 
 summary(Training_TX)
 summary(Test_TX)
@@ -105,6 +100,8 @@ ase5
 ```
 In this example the k = 5 model has the better fit because of the lower ASE of 4.172047e-05 versus the k = 3 model which had a result of 5.225094e-05. 
 
+
+Creating an automatic KNN that runs multiple versions to see if there's anything different then the basic knn function. 
 ```{r automated version of B9}
 set.seed(7)
 #Setting the number of times we will train our KNN
@@ -113,7 +110,7 @@ trainMethod <- trainControl(method = "repeatedcv",
                             repeats = 3)
 
 #training multiple KNNs to see which K has the best fit
-knn_fit <- train(IBU ~ ., 
+knn_fit <- train(ABV~IBU, 
                  data = Training_TX, 
                  method = "knn",
                  trControl = trainMethod,
@@ -140,9 +137,85 @@ PredictValues
 ```
 The issue that arises when using KNN to predict ABV is that the predictions are all identical. 
 
-## KNN Classification
+## KNN Classification (13 - 16)
 Filter the beerCOTX dataframe for only beers that are from Texas and are American IPA and American Pale Ale. 
 Divide this filtered data set into a training and test set (60/40, training / test split).
 ```{r filter data}
-beerClass <- subset.data.frame(beerTX, Style == c("American Pale Ale (APA)", "American IPA"))
+APA <- subset.data.frame(beerTX, Style == "American Pale Ale (APA)")
+IPA <- subset.data.frame(beerTX, Style == "American IPA")
+beerClass <- rbind.data.frame(APA, IPA)
+
+set.seed(7)
+Class = sample(seq(1,dim(beerClass)[1]),round(.60*dim(beerClass)[1]),replace = FALSE)
+#TX_Train
+Train_Beer = beerClass[Class,]
+#TX_Test
+Test_Beer = beerClass[-Class,]
+
+#Check to see if it pulled 60/40
+##dim(Test_Beer) 3 10 
+##dim(Train_Beer) 5 10 
+
+```
+Use the class package’s knn function to build an KNN classifier with k = 3 that will use ABV and IBU as features (explanatory variables) to classify Texas beers as American IPA or American Pale Ale using the Training data.  Use your test set to create a confusion table to estimate the accuracy, sensitivity and specificity of the model.
+
+```{r knn class}
+library(e1071)
+
+results <- class::knn(Train_Beer[,c(4:5)], Test_Beer[,c(4:5)], Train_Beer$Style, k=3)
+Test_Beer$ClassPredict <- results
+
+confusionMatrix(
+  factor(Test_Beer$Style, levels = c("American Pale Ale (APA)","American IPA")),
+  factor(Test_Beer$ClassPredict, levels = c("American Pale Ale (APA)","American IPA"))
+)
+
+```
+
+```{r knn 5 class}
+results_5 <- class::knn(Train_Beer[,c(4:5)], Test_Beer[,c(4:5)], Train_Beer$Style, k=5)
+Test_Beer$ClassPredict_5 <- results_5
+
+confusionMatrix(
+  factor(Test_Beer$Style, levels = c("American Pale Ale (APA)","American IPA")),
+  factor(Test_Beer$ClassPredict_5, levels = c("American Pale Ale (APA)","American IPA"))
+)
+
+```
+The K = 3 model classifier was more accurate than the K = 5 model with a 1 on accuracy. The sensitivity is 100%, but it had a specificity of 100% also. Because of this large room for error, it may be beneficial to run this same model on a larger Test data set (maybe not just the Texas Beers).
+
+# Unit 11 Questions
+## 
+
+```{r NYT data}
+library(keyring)
+
+NYTIMES_KEY = "xx " #Your Key Here … get from NTY API website
+key_set("MY_FAKE_TOKEN")
+
+
+# Let's set some parameters
+term <- "Central+Park+Jogger" # Need to use + to string together separate words
+begin_date <- "19890419"
+end_date <- "19910419" #how do we know the structure of this field is YYYYMMDD ?
+
+baseurl <- paste0("http://api.nytimes.com/svc/search/v2/articlesearch.json?q=",term,
+                  "&begin_date=",begin_date,"&end_date=",end_date,
+                  "&facet_filter=true&api-key=",NYTIMES_KEY, sep="")
+#used to concat ful URL for search
+baseurl
+
+initialQuery <- jsonlite::fromJSON(baseurl)
+maxPages <- round((initialQuery$response$meta$hits[1] / 10)-1) #whats with the multiple $ signs
+maxPages
+
+pages <- list()
+for(i in 0:maxPages){
+  nytSearch <- jsonlite::fromJSON(paste0(baseurl, "&page=", i), flatten = TRUE) %>% data.frame() 
+  message("Retrieving page ", i)
+  pages[[i+1]] <- nytSearch 
+  Sys.sleep(7) 
+}
+
+allNYTSearch <- rbind_pages(pages)
 
