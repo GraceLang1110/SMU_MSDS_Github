@@ -1,0 +1,18 @@
+---
+title: "Assignment12_Summer19_Grace_Lang"
+author: "Grace Lang"
+date: "7/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+
+df <- EuStockMarkets[,1]
+
+
+plot(df,ylab = "DAX", xlab = "Year",main = "Germany DAX Stock Closing Prices by Year",xlim = c(1991, 1999))
+
+
+```
+
