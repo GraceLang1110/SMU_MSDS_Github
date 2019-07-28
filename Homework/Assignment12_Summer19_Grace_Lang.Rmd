@@ -5,14 +5,108 @@ date: "7/27/2019"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+# Warm Up: Brief Financial Data (20%):    
+Create a rudimentary plot of the data. In 1997, an event happened you want to indicate; add a vertical red line to your plot which divides pre-1997 and post-1997 information.
+```{r setup, include = FALSE}
 library(ggplot2)
+library(fpp)
+library(fpp2)
+library(xts)
+library(dygraphs)
+library(stats)
+```    
 
+
+```{r simple plot}
 df <- EuStockMarkets[,1]
 
 
-plot(df,ylab = "DAX", xlab = "Year",main = "Germany DAX Stock Closing Prices by Year",xlim = c(1991, 1999))
-
+plot(df,ylab = "DAX", xlab = "Year",main = "Germany DAX Stock Closing Prices by Year",xlim = c(1991, 1999), col="blue")
+abline(v=1997,col="red")
 
 ```
+
+Decompose the time series into its components (i.e., trend, seasonality, random).  Keep in mind that this is a multiplicative model you want.  Create a plot of all decomposed components.  As before, make all lines blue and have a vertical divider at the year 1997.
+```{r decompose}
+dax2 <- decompose(df, type = "multiplicative")
+
+plot(dax2, col="blue")
+abline(v=1997,col="red")
+```    
+
+# Temperature Data (40%): 
+Use the maxtemp dataset.  To see what you’re looking at, execute the command in ‘Examples’ in the help document. Create TS of 1990 +. 
+```{r temp}
+autoplot(maxtemp)
+temp <- window(maxtemp,start = 1990)
+```    
+
+Utilize SES to predict the next five years of maximum temperatures in Melbourne.  So, to review, you should have your fit, the predicted value line overlaying it, and a forecast through 2021, all on one axis. 
+```{r ses}
+ses_fit_5 = ses(temp, h = 5) #defaults, not clarified in hw
+
+
+plot(temp,main = "Australian Maximum Annual Temperatures (SES Forecast)",ylab = "Maximum Temperatures Celsius", xlab = "Year", type = "o", xlim = c(1990, 2021))
+lines(fitted(ses_fit_5), col = "blue", type = "o")
+lines(ses_fit_5$mean, col = "blue", type = "o")
+
+```     
+
+Find the AIC and BIC of this fitted model.
+
+```{r accuracy} 
+summary(ses_fit_5)
+
+```    
+
+Now use a damped Holt’s linear trend to also predict out five years.  
+    _**SES fit is blue & Holt fit is dark green.**_
+```{r holt}
+holt_fit = holt(temp, damped = TRUE, initial = "optimal", h = 5)
+
+plot(temp,main = "Australian Maximum Annual Temperatures (SES + Holt Forecast)",ylab = "Maximum Temperatures Celsius", xlab = "Year", type = "o", xlim = c(1990, 2021))
+lines(fitted(ses_fit_5), col = "blue", type = "o")
+lines(ses_fit_5$mean, col = "blue", type = "o")
+lines(fitted(holt_fit), col = "darkgreen", type= "o")
+lines(holt_fit$mean,col = "darkgreen", type= "o")
+```   
+
+Compare the AICc and BIC of the ses() and holt() models.  Which model is better here?
+```{r compare}
+summary(holt_fit)
+
+```   
+
+Calculate and compare the ASE from the ses() and holt() models.  Which one performs better with respect to this metric?
+```{r ase}
+
+```   
+
+# The Wands Choose the Wizard (40%):
+
+Utilize the dygraphs library.  Read in both Unit12TimeSeries_Ollivander and _Gregorovitch.csv as two different data frames.  They do not have headers, so make sure you account for that.  This is a time series of Wands sold over years.
+```{r wizard data}
+greg_url <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%2012/Unit12TimeSeries_Gregorovitch.csv"
+oliv_url <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/Unit%2012/Unit12TimeSeries_Ollivander.csv"
+
+greg = read.table(greg_url, header = FALSE, sep = ",")
+oliv = read.table(oliv_url, header = FALSE, sep=",")
+
+greg$V1 <- as.Date(greg$V1, format = "%m/%d/%Y")
+oliv$V1 <- as.Date(oliv$V1, format = "%m/%d/%Y")
+
+greg_ts <- xts(x = greg[[2]], order.by = greg[[1]])
+oliv_ts <- xts(x = oliv[[2]], order.by = oliv[[1]])
+```    
+
+Bind the two xts objects together and create a dygraph from it.  
+```{r dygraph}
+comb <- cbind(greg_ts,oliv_ts)
+
+
+dygraph(comb, main = "Number of Wands Sold by Year & Wandmaker", xlab = "Years in Business", ylab = "Number of Wands Sold")  %>% dyRangeSelector(height = 100) %>% dyRangeSelector(height = 50) %>% dySeries("greg_ts", label = "Gregorovitch") %>% dySeries("oliv_ts", label = "Ollivander") %>% dyOptions(stackedGraph = TRUE, colors = c("orange","purple")) %>% dyShading(from = "1995-01-01",to = "1999-01-01", color = "#b1b5b3") %>% dyHighlight(highlightSeriesOpts = list(strokeWidth = 3))
+
+```    
+
+_**Note: The dark shaded gray area is the years that Voldemort was alive and at large.**_
 
