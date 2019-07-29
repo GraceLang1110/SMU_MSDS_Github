@@ -14,6 +14,7 @@ library(fpp2)
 library(xts)
 library(dygraphs)
 library(stats)
+library(mltools)
 ```    
 
 
@@ -60,7 +61,7 @@ summary(ses_fit_5)
 ```    
 
 Now use a damped Holt’s linear trend to also predict out five years.  
-    _**SES fit is blue & Holt fit is dark green.**_
+   _**SES fit is <span style="color:blue">blue</span> & Holt fit is <span style="color:darkgreen">dark green</span>.**_ 
 ```{r holt}
 holt_fit = holt(temp, damped = TRUE, initial = "optimal", h = 5)
 
@@ -71,14 +72,28 @@ lines(fitted(holt_fit), col = "darkgreen", type= "o")
 lines(holt_fit$mean,col = "darkgreen", type= "o")
 ```   
 
+
 Compare the AICc and BIC of the ses() and holt() models.  Which model is better here?
+
+The SES Model has an AIC of 140.5 and a BIC of 144.4. The damped Holt Model has an AIC of 141.4 and a BIC of 149.2. Since the SES Model has a lower AIC & BIC it is the better fit in this comparison. 
 ```{r compare}
 summary(holt_fit)
 
 ```   
 
 Calculate and compare the ASE from the ses() and holt() models.  Which one performs better with respect to this metric?
+
+In reference to the ASE metric, the Holt Model performs better with a lower ASE versus the SES Model. 
 ```{r ase}
+
+ase_ses <- (ses_fit_5$residuals)^2
+ase_holt <- (holt_fit$residuals)^2
+
+#mean(ase_ses)
+#mean(ase_holt)
+
+sum(ase_ses)/(27-1)
+sum(ase_holt)/(27-1)
 
 ```   
 
