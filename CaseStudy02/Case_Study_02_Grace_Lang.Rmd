@@ -1,0 +1,145 @@
+---
+title: "Case_Study_02_Grace_Lang"
+author: "Grace Lang"
+date: "8/1/2019"
+output: html_document
+---
+# Data Setup
+Read in the data
+```{r setup, include=FALSE}
+library(ggplot2)
+library(fpp)
+library(fpp2)
+library(dygraphs)
+library(statsr)
+library(mltools)
+library(caret)
+
+url <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/UNIT%2014/CaseStudy2-data.csv"
+
+Initial <- read.csv(url, header=TRUE, sep=",")
+```
+
+Explore the structure of the data
+```{r structure}
+str(Initial)
+summary(Initial)
+```
+
+Drop columns that wont add value to analysis:    
+  * ID = row number    
+  * EmployeeCount = 1    
+  * Over18 = Y    
+  * StandardHours = 80    
+```{r drop}
+Initial$ID <- NULL
+Initial$EmployeeCount <- NULL
+Initial$Over18 <- NULL
+Initial$StandardHours <- NULL
+```
+
+Create a couple custom variables:
+```{r column create}
+Initial$Education <- as.factor(Initial$Education)
+Initial$EducationLevel <- interaction(Initial$EducationField, Initial$Education)
+
+Initial$JobLevel <- as.factor(Initial$JobLevel)
+Initial$JobRoleLevel <- interaction(Initial$JobRole, Initial$JobLevel)
+
+```
+
+Descriptive Statistics
+```{r}
+cbbPalette <- c("#E69F00", "#009E73")
+
+ggplot(Initial, aes(Attrition,fill=Attrition)) + geom_bar(fill = cbbPalette ) + theme_minimal() + theme(plot.title = element_text(hjust=0.5), legend.position ="none") + labs(x="Did Employee Leave Company?", y="Number of Employees", title = "Number of Employees Who Left Frito Lay") 
+
+prop.table(table(Initial$Attrition))
+
+#Employees who live closer to workhave a higher attrition rate
+ggplot(Initial, aes(DistanceFromHome,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Distance From Home", y="Number of Employees") 
+
+#As job level increases the amount of people who leave decreases
+ggplot(Initial, aes(JobLevel,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Job Level", y="Number of Employees") 
+
+#There are higher rates of attrition with lower job satisfaction
+ggplot(Initial, aes(JobSatisfaction,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Job Satisfaction", y="Number of Employees") 
+```
+
+
+# Training & Test Set
+```{r training}
+set.seed(7)
+Set = sample(seq(1,dim(Initial)[1]),round(.60*dim(Initial)[1]),replace = FALSE)
+#Training Set
+Train = Initial[Set,]
+#Test Set
+Test = Initial[-Set,]
+
+#Check to see if it pulled 60/40% 
+#dim(Test) 348  32
+#dim(Train) 522  32
+
+```
+
+# KNN Model
+The accuracy for this model is around 84%; however, it does not meet the 60/60 sensitivity/specificity requirement. 
+```{r knn}
+set.seed(7)
+fit_knn <- train(Attrition~.,Train,method = 'knn',trControl = trainControl(method = 'repeatedcv',number = 3))
+Predict_knn <- predict(fit_knn,Test)
+
+confusionMatrix(Test$Attrition, Predict_knn)
+
+```
+
+# Other Models for reference
+The Support Vector Machine (SVM) has the highest accuracy without sacrificing the sensitivity and specificity results. 
+```{r other}
+library(mboost)
+library(kernlab)
+library(randomForest)
+
+set.seed(7)
+#fit_nn <- train(Attrition ~.,Train,method = 'pcaNNet',trControl = trainControl(method = 'repeatedcv',number = 3),tuneGrid = expand.grid(size = 25,decay = 0.01))
+
+#fit_glmBoost <- train(Attrition~.,Train,method = 'glmboost',trControl = trainControl(method = 'repeatedcv',number = 3))
+fit_rf <- train(Attrition ~.,Train,method = 'rf', trControl = trainControl(method = 'repeatedcv',number = 3)) 
+fit_glm <- train(Attrition~.,Train,method = 'glm',trControl = trainControl(method = 'repeatedcv',number = 3))
+fit_svm <- train(Attrition~.,Train,method = 'svmRadial',trControl = trainControl(method = 'repeatedcv',number = 3))
+
+
+
+Predictions_rf <- predict(fit_rf, Test)
+Predictions_glm <- predict(fit_glm, Test)
+Predictions_svm <- predict(fit_svm,Test)
+
+
+confusionMatrix(Test$Attrition, Predictions_rf) #89% accuracy, 89/94% Sens/Spec
+confusionMatrix(Test$Attrition, Predictions_glm) #89% accuracy, 94/63% Sens/Spec
+confusionMatrix(Test$Attrition, Predictions_svm) #88% accuracy, 88/100% Sens/Spec
+```
+
+
+# Logistic Regression Model
+```{r regression}
+set.seed(7)
+model <- glm(Attrition ~ Age+BusinessTravel+Department+DistanceFromHome+
+               Education+EducationField+EnvironmentSatisfaction+Gender+JobInvolvement+
+               JobLevel+JobRole+JobSatisfaction+MaritalStatus+MonthlyIncome+NumCompaniesWorked+
+               OverTime+PercentSalaryHike+PerformanceRating+RelationshipSatisfaction+
+               TotalWorkingYears+TrainingTimesLastYear+WorkLifeBalance+ 
+               YearsAtCompany+YearsInCurrentRole+YearsSinceLastPromotion+
+               YearsWithCurrManager,family=binomial(link='logit'),data=Train)
+
+summary(model)
+```
+
+# CART Model
+```{r decision tree}
+fit_rpart <- train(Attrition ~.,Train,method = 'rpart', trControl = trainControl(method = 'cv',number = 3))
+Predictions_rpart <- predict(fit_rpart,Test)
+confusionMatrix(Test$Attrition, Predictions_rpart)
+
+```
+
