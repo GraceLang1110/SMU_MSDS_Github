@@ -15,9 +15,16 @@ library(statsr)
 library(mltools)
 library(caret)
 
-url <- "https://raw.githubusercontent.com/BivinSadler/MSDS-6306-Doing-Data-Science/master/UNIT%2014/CaseStudy2-data.csv"
+url <- "https://raw.githubusercontent.com/GraceLang1110/SMU_MSDS_Github/master/CaseStudy02/CaseStudy2-data.csv"
 
 Initial <- read.csv(url, header=TRUE, sep=",")
+
+
+##Attrition Data
+att <- "https://raw.githubusercontent.com/GraceLang1110/SMU_MSDS_Github/master/CaseStudy02/CaseStudy2CompSet_NoAttrition.csv"
+
+attrition <- read.csv(att, header=TRUE, sep=",")
+
 ```
 
 Explore the structure of the data
