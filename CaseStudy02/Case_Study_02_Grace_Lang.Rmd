@@ -4,8 +4,14 @@ author: "Grace Lang"
 date: "8/1/2019"
 output: html_document
 ---
+# Introduction
+DDS Analytics has been contracted by Frito Lay to do the following: build a model that helps predict attrition for employees, reveal top 3 factors that lead to attrition, and understand some common trends of employees who decide to leave the company. 
+
+# Data Importing & Cleaning
+Frito Lay provided a sample dataset that includes around 870 employees with a flag on whether or not they left the company. Around 16% of the 870 employees left the company. It is unclear on the timeframe of the employee data-pull. 
+
 # Data Setup
-Read in the data
+Read in the data; details on how to read in the data are found within the .Rmd file.
 ```{r setup, include=FALSE}
 library(ggplot2)
 library(fpp)
@@ -14,7 +20,10 @@ library(dygraphs)
 library(statsr)
 library(mltools)
 library(caret)
+library(dplyr)
+library(stats)
 
+#Initial Dataset
 url <- "https://raw.githubusercontent.com/GraceLang1110/SMU_MSDS_Github/master/CaseStudy02/CaseStudy2-data.csv"
 
 Initial <- read.csv(url, header=TRUE, sep=",")
@@ -27,11 +36,26 @@ attrition <- read.csv(att, header=TRUE, sep=",")
 
 ```
 
-Explore the structure of the data
+### Explore the structure of the data
+The average Total Worked Years is 11.05 years compared to only 6.96 years at Frito Lay and an average of 4.2 years in their current role. Also, the average time since the employee's last promotion is around 2.2  years. The average Age of the employees is 37 years. The majority of the dataset work as a Sales Executive, a Research Scientist or a Lab Technician. 
+
+The Hourly average rate is $65.61/hour. The average Monthly Rate is $14,326/month. The average Monthly Income is $6,390/month. 
+
+Below are histograms of Hourly Rate and Monthly income of the employees surveyed.
 ```{r structure}
 str(Initial)
 summary(Initial)
 ```
+
+
+```{r}
+hist(Initial$HourlyRate, col = "#56B4E9", xlab="Hourly Rate", ylab = "Number of Employees", main="Histogram of Hourly Rate")
+```
+
+```{r}
+hist(Initial$MonthlyIncome, col = "#E69F00", xlab="Monthly Income", ylab = "Number of Employees", main="Histogram of Monthly Income")
+```
+
 
 Drop columns that wont add value to analysis:    
   * ID = row number    
@@ -46,15 +70,6 @@ Initial$Over18 <- NULL
 Initial$StandardHours <- NULL
 ```
 
-Create a couple custom variables:
-```{r column create}
-#Initial$Education <- as.factor(Initial$Education)
-#Initial$EducationLevel <- interaction(Initial$EducationField, Initial$Education)
-
-#Initial$JobLevel <- as.factor(Initial$JobLevel)
-#Initial$JobRoleLevel <- interaction(Initial$JobRole, Initial$JobLevel)
-
-```
 
 Descriptive Statistics & Creation of New Variables
 ```{r}
@@ -63,6 +78,7 @@ Palette <- c("#56B4E9","#E69F00")
 
 ggplot(Initial, aes(Attrition,fill=Attrition)) + geom_bar(fill = Palette ) + theme_minimal() + theme(plot.title = element_text(hjust=0.5), legend.position ="none") + labs(x="Did Employee Leave Company?", y="Number of Employees", title = "Number of Employees Who Left Frito Lay") 
 
+#16 % of dataset are employees who left the company
 prop.table(table(Initial$Attrition))
 
 #Employees who live 11 - 25 miles from work have a higher attrition rate
@@ -96,8 +112,34 @@ Initial$AgeGroup <- with(Initial,ifelse(Age>31,"32 and Older ","Under 31"))
 prop.table(table(Initial$Attrition, Initial$AgeGroup),2)
 
 ggplot(Initial, aes(x=reorder(AgeGroup,Age),fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Age Group", y="Number of Employees", title = "Attrition by Age Group") + scale_fill_manual(values = Palette)
+
+#Years since last promotion
+ggplot(Initial, aes(YearsSinceLastPromotion,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Age", y="Number of Employees", title = "Attrition by Years Since Last Promotion") + scale_fill_manual(values = Palette)
+
+prop.table(table(Initial$Attrition, Initial$YearsSinceLastPromotion),2)
+
+#Creating a Promotion Bucket
+Initial$PromotionGroup <- with(Initial,ifelse(YearsSinceLastPromotion>9,"10+ Years",ifelse(YearsSinceLastPromotion>4,"5-9 Years",ifelse(YearsSinceLastPromotion>1,"2-4 Years",ifelse(YearsSinceLastPromotion>0,"1 Year","Less 1 Year")))))
+
+ggplot(Initial, aes(x=reorder(PromotionGroup,YearsSinceLastPromotion),fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Age", y="Number of Employees", title = "Attrition by Years Since Last Promotion (Grouped)") + scale_fill_manual(values = Palette)
+
+prop.table(table(Initial$Attrition, Initial$PromotionGroup),2)
+
+Initial$PromotionGroup2 <- with(Initial,ifelse(YearsSinceLastPromotion>9,"10+ Years",ifelse(YearsSinceLastPromotion>3,"4-9 Years","Less 4 Years")))
+
+prop.table(table(Initial$Attrition, Initial$PromotionGroup2),2)
+
+# % of attrition by Job Role
+ggplot(Initial,aes(x = JobRole,fill = Attrition)) +
+  geom_bar(position = "dodge") +
+    ggtitle("Job Role vs Attrition - Count") +
+    coord_flip() +
+    theme(plot.title = element_text(hjust = 0.5))
 ```
 
+```{r more}
+
+```
 
 # Training & Test Set
 ```{r training}
@@ -115,6 +157,8 @@ Test = Initial[-Set,]
 ```
 
 # KNN Model
+K Nearest Neighbors Model is a classification model that compares inputs on their nearest neighbored inputs in order to classiy them in the correct grouping. 
+
 The accuracy for this model is around 84%; however, it does not meet the 60/60 sensitivity/specificity requirement. 
 ```{r knn}
 set.seed(7)
@@ -123,6 +167,35 @@ Predict_knn <- predict(fit_knn,Test)
 
 confusionMatrix(Test$Attrition, Predict_knn)
 
+varImp(fit_knn)
+```
+Looking at KNN Model in a slightly different code form
+```{r knn2}
+set.seed(7)
+fit_knn2 <- train(Attrition~.,Train, method = "knn", preProcess = c("center", "scale"), tuneLength = 10)
+
+Predict_knn2 <- predict(fit_knn2,Test)
+
+confusionMatrix(Test$Attrition, Predict_knn2)
+
+varImp(fit_knn2)
+
+```
+
+#Naive Bayes Model
+Naive Bayes tries to classify instances based on the probabilities of previously seen attributes/instances, assuming complete attribute independence.
+
+The accuracy for this model is around 86%; however, it does not meet the 60/60 sensitivity/specificity requirement. 
+```{r naive bayes}
+library(naivebayes)
+
+set.seed(7)
+fit_nb <- train(Attrition~.,Train,method = 'naive_bayes',trControl = trainControl(method = 'repeatedcv',number = 3))
+
+Predict_nb <- predict(fit_nb,Test)
+
+confusionMatrix(Test$Attrition, Predict_nb)
+varImp(fit_nb)
 ```
 
 # General Logistic Regression Model
@@ -137,6 +210,19 @@ model <- glm(Attrition ~ Age+BusinessTravel+Department+DistanceFromHome+
                YearsWithCurrManager,family=binomial(link='logit'),data=Train)
 
 summary(model)
+
+Predictions_logreg <- predict(model, Test)
+
+#Tranform the “Yes” and “No” to binary variables
+Test_logreg <- Test  %>% mutate(ModelPredictions = 1*(Predictions_logreg > .50) + 0,
+                                 BinaryAtt = 1*(Attrition == "Yes") + 0)
+#Compare the newly created columns “model_pred” and “visit_binary” to calculate the accuracy of our model       
+Final <- Test_logreg %>% mutate(accurate = 1*(ModelPredictions == BinaryAtt))
+#Accuracy Score
+sum(Final$accurate)/nrow(Final)
+
+confusionMatrix(Final$BinaryAtt, Final$ModelPredictions)
+str(Final)
 ```
 
 # Decision Tree Model
@@ -150,20 +236,24 @@ confusionMatrix(Test$Attrition, Predictions_rpart)
 ```
 
 # Other Models for reference
-The Support Vector Machine (SVM) has the highest accuracy without sacrificing the sensitivity and specificity results. 
+Sensitivity is the true positive rate (correct guesses for ) & specificity (true negative rate) how many predictions the model accurately predicted "No"
+
+Random Forest Model is a classifier model that builds multiple decision trees and then splits out the class predicition using a random set of data points. The tree subset predicition with the highest accuracy is used in the model output. 
+
+Generalized linear models (GLM) are useful when the response variable is continuous. 
+
+The Support Vector Machine (SVM) finds the optimal hyperplane between binary variables and then uses that hyperplan to classify the inputs. SVM has the highest accuracy without sacrificing the sensitivity and specificity results.
 ```{r other}
 library(mboost)
 library(kernlab)
 library(randomForest)
 
+
 set.seed(7)
-#fit_nn <- train(Attrition ~.,Train,method = 'pcaNNet',trControl = trainControl(method = 'repeatedcv',number = 3),tuneGrid = expand.grid(size = 25,decay = 0.01))
 
-#fit_glmBoost <- train(Attrition~.,Train,method = 'glmboost',trControl = trainControl(method = 'repeatedcv',number = 3))
-fit_rf <- train(Attrition ~.,Train,method = 'rf', trControl = trainControl(method = 'repeatedcv',number = 3)) 
-fit_glm <- train(Attrition~.,Train,method = 'glm',trControl = trainControl(method = 'repeatedcv',number = 3))
-fit_svm <- train(Attrition~.,Train,method = 'svmRadial',trControl = trainControl(method = 'repeatedcv',number = 3))
-
+fit_rf <- train(Attrition ~.,Train,method = 'rf', trControl = trainControl(method = 'repeatedcv')) 
+fit_glm <- train(Attrition~.,Train,method = 'glm',trControl = trainControl(method = 'repeatedcv'))
+fit_svm <- train(Attrition~.,Train,method = 'svmRadial',trControl = trainControl(method = 'repeatedcv'))
 
 
 Predictions_rf <- predict(fit_rf, Test)
@@ -172,6 +262,28 @@ Predictions_svm <- predict(fit_svm,Test)
 
 
 confusionMatrix(Test$Attrition, Predictions_rf) #89% accuracy, 89/94% Sens/Spec
-confusionMatrix(Test$Attrition, Predictions_glm) #89% accuracy, 94/63% Sens/Spec
+confusionMatrix(Test$Attrition, Predictions_glm) #90% accuracy, 94/63% Sens/Spec 
 confusionMatrix(Test$Attrition, Predictions_svm) #88% accuracy, 88/100% Sens/Spec
+
+
+varImp(fit_rf, scale = FALSE)
+varImp(fit_glm, scale = FALSE)
+varImp(fit_svm, scale = FALSE)
+
+#auc(Test$Attrition, Predictions_rf)
+#auc(Test$Attrition, Predictions_glm)
+#auc(Test$Attrition, Predictions_svm)
+
+```
+
+# Competition Set - Applying the SVM Model to the dataset with the predicited Attrition labels. 
+```{r competition}
+set.seed(7)
+fit_svm <- train(Attrition~.,Train,method = 'svmRadial',trControl = trainControl(method = 'repeatedcv'))
+attrition$Predictions_att <- predict(fit_svm,attrition)
+
+CompetitionSet <- attrition
+
+write.csv(CompetitionSet[,c(2,37)], "C:/Users/david/Desktop/DoingDataScience/Assignments/Assignment03/SMU_MSDS_Github/CaseStudy02/Case2PreditionsLang_Attrition.csv")
+
 ```
