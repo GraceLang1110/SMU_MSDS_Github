@@ -21,6 +21,13 @@ library(mltools)
 library(caret)
 library(dplyr)
 library(e1071)
+library(naivebayes)
+library(ggthemes)
+library(mboost)
+library(kernlab)
+library(randomForest)
+library(rminer)
+
 
 #Initial Dataset
 url <- "https://raw.githubusercontent.com/GraceLang1110/SMU_MSDS_Github/master/CaseStudy02/CaseStudy2-data.csv"
@@ -72,64 +79,65 @@ Initial$StandardHours <- NULL
 
 Descriptive Statistics & Creation of New Variables
 ```{r}
-library(ggthemes)
 Palette <- c("#56B4E9","#E69F00")
 
-ggplot(Initial, aes(Attrition,fill=Attrition)) + geom_bar(fill = Palette ) + theme_minimal() + theme(plot.title = element_text(hjust=0.5), legend.position ="none") + labs(x="Did Employee Leave Company?", y="Number of Employees", title = "Number of Employees Who Left Frito Lay") 
+Explore <- Initial
+
+ggplot(Explore, aes(Attrition,fill=Attrition)) + geom_bar(fill = Palette ) + theme_minimal() + theme(plot.title = element_text(hjust=0.5), legend.position ="none") + labs(x="Did Employee Leave Company?", y="Number of Employees", title = "Number of Employees Who Left Frito Lay") 
 
 #16 % of dataset are employees who left the company
-prop.table(table(Initial$Attrition))
+prop.table(table(Explore$Attrition))
 
 #Employees who live 11 - 25 miles from work have a higher attrition rate
-ggplot(Initial, aes(DistanceFromHome,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Distance From Home", y="Number of Employees", title = "Attrition by Distance From Home") + scale_fill_manual(values = Palette)
+ggplot(Explore, aes(DistanceFromHome,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Distance From Home", y="Number of Employees", title = "Attrition by Distance From Home") + scale_fill_manual(values = Palette)
 
 #Creating a Distance Group
-Initial$DistanceGroup <- with(Initial,ifelse(DistanceFromHome>25,"26+ Miles",ifelse(DistanceFromHome>20,"21 - 25 Miles",ifelse(DistanceFromHome>15,"16 - 20 Miles",ifelse(DistanceFromHome>10,"11 - 15 Miles",ifelse(DistanceFromHome>5,"6 - 10 Miles","Less than 6 Miles"))))))
+Explore$DistanceGroup <- with(Explore,ifelse(DistanceFromHome>25,"26+ Miles",ifelse(DistanceFromHome>20,"21 - 25 Miles",ifelse(DistanceFromHome>15,"16 - 20 Miles",ifelse(DistanceFromHome>10,"11 - 15 Miles",ifelse(DistanceFromHome>5,"6 - 10 Miles","Less than 6 Miles"))))))
 
-ggplot(Initial, aes(x=reorder(DistanceGroup,DistanceFromHome),fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Distance From Home - Grouping", y="Number of Employees", title = "Attrition by Distance From Home (Grouped)") + scale_fill_manual(values = Palette) 
+ggplot(Explore, aes(x=reorder(DistanceGroup,DistanceFromHome),fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Distance From Home - Grouping", y="Number of Employees", title = "Attrition by Distance From Home (Grouped)") + scale_fill_manual(values = Palette) 
 
-prop.table(table(Initial$Attrition, Initial$DistanceGroup),2)
+prop.table(table(Explore$Attrition, Explore$DistanceGroup),2)
 
 #As job level increases the amount of people who leave decreases
-ggplot(Initial, aes(JobLevel,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Job Level", y="Number of Employees", title = "Attrition by Job Level") + scale_fill_manual(values = Palette)
+ggplot(Explore, aes(JobLevel,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Job Level", y="Number of Employees", title = "Attrition by Job Level") + scale_fill_manual(values = Palette)
 
 
 #There are higher rates of attrition with lower job satisfaction
-ggplot(Initial, aes(JobSatisfaction,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Job Satisfaction", y="Number of Employees", title = "Attrition by Job Satisfaction") + scale_fill_manual(values = Palette)
+ggplot(Explore, aes(JobSatisfaction,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Job Satisfaction", y="Number of Employees", title = "Attrition by Job Satisfaction") + scale_fill_manual(values = Palette)
 #Those that rate their Job Satisfaction a 1 or 2 have 18 - 21% attrition rate within the sample of data.
-prop.table(table(Initial$Attrition, Initial$JobSatisfaction),2)
+prop.table(table(Explore$Attrition, Explore$JobSatisfaction),2)
 
 
 #18 - 31 year olds have on average higher attrition rate than 32+ 
 #26% of under 31 year olds attribute & only 12% of 32+ attribute
-ggplot(Initial, aes(Age,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Age", y="Number of Employees", title = "Attrition by Age") + scale_fill_manual(values = Palette)
-##prop.table(table(Initial$Attrition, Initial$Age),2)
+ggplot(Explore, aes(Age,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Age", y="Number of Employees", title = "Attrition by Age") + scale_fill_manual(values = Palette)
+##prop.table(table(Explore$Attrition, Explore$Age),2)
 
 #Create Age Group Bucket
-Initial$AgeGroup <- with(Initial,ifelse(Age>31,"32 and Older ","Under 31"))      
+Explore$AgeGroup <- with(Explore,ifelse(Age>31,"32 and Older ","Under 31"))      
 
-prop.table(table(Initial$Attrition, Initial$AgeGroup),2)
+prop.table(table(Explore$Attrition, Explore$AgeGroup),2)
 
-ggplot(Initial, aes(x=reorder(AgeGroup,Age),fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Age Group", y="Number of Employees", title = "Attrition by Age Group") + scale_fill_manual(values = Palette)
+ggplot(Explore, aes(x=reorder(AgeGroup,Age),fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Age Group", y="Number of Employees", title = "Attrition by Age Group") + scale_fill_manual(values = Palette)
 
 #Years since last promotion
-ggplot(Initial, aes(YearsSinceLastPromotion,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Age", y="Number of Employees", title = "Attrition by Years Since Last Promotion") + scale_fill_manual(values = Palette)
+ggplot(Explore, aes(YearsSinceLastPromotion,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Age", y="Number of Employees", title = "Attrition by Years Since Last Promotion") + scale_fill_manual(values = Palette)
 
-prop.table(table(Initial$Attrition, Initial$YearsSinceLastPromotion),2)
+prop.table(table(Explore$Attrition, Explore$YearsSinceLastPromotion),2)
 
 #Creating a Promotion Bucket
-Initial$PromotionGroup <- with(Initial,ifelse(YearsSinceLastPromotion>9,"10+ Years",ifelse(YearsSinceLastPromotion>4,"5-9 Years",ifelse(YearsSinceLastPromotion>1,"2-4 Years",ifelse(YearsSinceLastPromotion>0,"1 Year","Less 1 Year")))))
+Explore$PromotionGroup <- with(Explore,ifelse(YearsSinceLastPromotion>9,"10+ Years",ifelse(YearsSinceLastPromotion>4,"5-9 Years",ifelse(YearsSinceLastPromotion>1,"2-4 Years",ifelse(YearsSinceLastPromotion>0,"1 Year","Less 1 Year")))))
 
-ggplot(Initial, aes(x=reorder(PromotionGroup,YearsSinceLastPromotion),fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Age", y="Number of Employees", title = "Attrition by Years Since Last Promotion (Grouped)") + scale_fill_manual(values = Palette)
+ggplot(Explore, aes(x=reorder(PromotionGroup,YearsSinceLastPromotion),fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Age", y="Number of Employees", title = "Attrition by Years Since Last Promotion (Grouped)") + scale_fill_manual(values = Palette)
 
-prop.table(table(Initial$Attrition, Initial$PromotionGroup),2)
+prop.table(table(Explore$Attrition, Explore$PromotionGroup),2)
 
-Initial$PromotionGroup2 <- with(Initial,ifelse(YearsSinceLastPromotion>9,"10+ Years",ifelse(YearsSinceLastPromotion>3,"4-9 Years","Less 4 Years")))
+Explore$PromotionGroup2 <- with(Explore,ifelse(YearsSinceLastPromotion>9,"10+ Years",ifelse(YearsSinceLastPromotion>3,"4-9 Years","Less 4 Years")))
 
-prop.table(table(Initial$Attrition, Initial$PromotionGroup2),2)
+prop.table(table(Explore$Attrition, Explore$PromotionGroup2),2)
 
 # % of attrition by Job Role
-ggplot(Initial,aes(x = JobRole,fill = Attrition)) +
+ggplot(Explore,aes(x = JobRole,fill = Attrition)) +
   geom_bar(position = "dodge") +
     ggtitle("Job Role vs Attrition - Count") +
     coord_flip() +
@@ -139,6 +147,7 @@ ggplot(Initial,aes(x = JobRole,fill = Attrition)) +
 
 # Training & Test Set
 ```{r training}
+
 set.seed(7)
 Set = sample(seq(1,dim(Initial)[1]),round(.60*dim(Initial)[1]),replace = FALSE)
 #Training Set
@@ -185,8 +194,6 @@ Naive Bayes tries to classify instances based on the probabilities of previously
 
 The accuracy for this model is around 86%; however, it does not meet the 60/60 sensitivity/specificity requirement. 
 ```{r naive bayes}
-library(naivebayes)
-
 set.seed(7)
 fit_nb <- train(Attrition~.,Train,method = 'naive_bayes',trControl = trainControl(method = 'repeatedcv',number = 3))
 
@@ -231,8 +238,8 @@ confusionMatrix(Test$Attrition, Predictions_rpart)
 
 ```
 
-# Other Models for reference
-Sensitivity is the true positive rate (correct guesses for ) & specificity (true negative rate) how many predictions the model accurately predicted "No"
+# Other Models for Final Rundown
+Sensitivity is the true positive rate (correct guesses for "Yes") & specificity (true negative rate) how many predictions the model accurately predicted "No".
 
 Random Forest Model is a classifier model that builds multiple decision trees and then splits out the class predicition using a random set of data points. The tree subset predicition with the highest accuracy is used in the model output. 
 
@@ -240,11 +247,6 @@ Generalized linear models (GLM) are useful when the response variable is continu
 
 The Support Vector Machine (SVM) finds the optimal hyperplane between binary variables and then uses that hyperplan to classify the inputs. SVM has the highest accuracy without sacrificing the sensitivity and specificity results.
 ```{r other}
-library(mboost)
-library(kernlab)
-library(randomForest)
-
-
 set.seed(7)
 
 fit_rf <- train(Attrition ~.,Train,method = 'rf', trControl = trainControl(method = 'repeatedcv')) 
@@ -257,14 +259,16 @@ Predictions_glm <- predict(fit_glm, Test)
 Predictions_svm <- predict(fit_svm,Test)
 
 
-confusionMatrix(Test$Attrition, Predictions_rf) #89% accuracy, 89/94% Sens/Spec
+confusionMatrix(Test$Attrition, Predictions_rf) #89% accuracy, 89/92% Sens/Spec
 confusionMatrix(Test$Attrition, Predictions_glm) #90% accuracy, 94/63% Sens/Spec 
 confusionMatrix(Test$Attrition, Predictions_svm) #88% accuracy, 88/100% Sens/Spec
 
 
-varImp(fit_rf, scale = FALSE)
-varImp(fit_glm, scale = FALSE)
-#varImp(fit_svm, scale = FALSE)
+caret::varImp(fit_rf, scale = FALSE)
+caret::varImp(fit_glm, scale = FALSE)
+varImp(object=fit_svm)
+par(mfrow=c(2,2))
+plot(varImp(object=fit_svm),   main="SVM - Variable Importance")
 
 #auc(Test$Attrition, Predictions_rf)
 #auc(Test$Attrition, Predictions_glm)
@@ -302,5 +306,20 @@ CompetitionSet <- attrition
 salary_url <- "https://raw.githubusercontent.com/GraceLang1110/SMU_MSDS_Github/master/CaseStudy02/CaseStudy2CompSet%20No%20Salary.csv"
 
 Salary <- read.csv(salary_url, header=TRUE, sep=",")
+
+Salary$EmployeeCount <- NULL
+Salary$Over18 <- NULL
+Salary$StandardHours <- NULL
+
+sal_rf <- train(MonthlyIncome ~.,Train,method = 'rf', trControl = trainControl(method = 'repeatedcv')) 
+sal_glm <- train(MonthlyIncome~.,Train,method = 'glm',trControl = trainControl(method = 'repeatedcv'))
+sal_svm <- train(MonthlyIncome~.,Train,method = 'svmRadial',trControl = trainControl(method = 'repeatedcv'))
+
+
+PredictionsSal_rf <- as.integer(predict(sal_rf, Test))
+PredictionsSal_glm <- as.integer(predict(sal_glm, Test))
+PredictionsSal_svm <- as.integer(predict(sal_svm,Test))
+
+identical(levels(Test$MonthlyIncome),levels(PredictionsSal_rf))
 
 ```
