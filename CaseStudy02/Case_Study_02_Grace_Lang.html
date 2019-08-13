@@ -7,6 +7,7 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 <meta name="author" content="Grace Lang" />
@@ -343,18 +344,6 @@ summary {
 }
 </style>
 
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
 <!-- code folding -->
 
 
@@ -531,12 +520,6 @@ Initial$X &lt;- NULL
 Initial$EmployeeCount &lt;- NULL
 Initial$Over18 &lt;- NULL
 Initial$StandardHours &lt;- NULL</code></pre>
-<p>Create a couple custom variables:</p>
-<pre class="r"><code>#Initial$Education &lt;- as.factor(Initial$Education)
-#Initial$EducationLevel &lt;- interaction(Initial$EducationField, Initial$Education)
-
-#Initial$JobLevel &lt;- as.factor(Initial$JobLevel)
-#Initial$JobRoleLevel &lt;- interaction(Initial$JobRole, Initial$JobLevel)</code></pre>
 <p>Descriptive Statistics &amp; Creation of New Variables</p>
 <pre class="r"><code>library(ggthemes)
 Palette &lt;- c(&quot;#56B4E9&quot;,&quot;#E69F00&quot;)
@@ -650,9 +633,12 @@ Test = Initial[-Set,]
 </div>
 <div id="knn-model" class="section level1">
 <h1>KNN Model</h1>
+<p>K Nearest Neighbors Model is a classification model that compares inputs on their nearest neighbored inputs in order to classiy them in the correct grouping.</p>
 <p>The accuracy for this model is around 84%; however, it does not meet the 60/60 sensitivity/specificity requirement.</p>
 <pre class="r"><code>set.seed(7)
+
 fit_knn &lt;- train(Attrition~.,Train,method = &#39;knn&#39;,trControl = trainControl(method = &#39;repeatedcv&#39;,number = 3))
+
 Predict_knn &lt;- predict(fit_knn,Test)
 
 confusionMatrix(Test$Attrition, Predict_knn)</code></pre>
@@ -683,6 +669,8 @@ confusionMatrix(Test$Attrition, Predict_knn)</code></pre>
 ##                                           
 ##        &#39;Positive&#39; Class : No              
 ## </code></pre>
+<pre class="r"><code>#varImp(fit_knn)</code></pre>
+<p>Looking at KNN Model in a slightly different code form</p>
 <pre class="r"><code>set.seed(7)
 fit_knn2 &lt;- train(Attrition~.,Train, method = &quot;knn&quot;, preProcess = c(&quot;center&quot;, &quot;scale&quot;), tuneLength = 10)
 
@@ -716,15 +704,46 @@ confusionMatrix(Test$Attrition, Predict_knn2)</code></pre>
 ##                                          
 ##        &#39;Positive&#39; Class : No             
 ## </code></pre>
+<pre class="r"><code>#varImp(fit_knn2)</code></pre>
 <p>#Naive Bayes Model Naive Bayes tries to classify instances based on the probabilities of previously seen attributes/instances, assuming complete attribute independence.</p>
-<pre class="r"><code>#library(klaR)
+<p>The accuracy for this model is around 86%; however, it does not meet the 60/60 sensitivity/specificity requirement.</p>
+<pre class="r"><code>library(naivebayes)</code></pre>
+<pre><code>## Warning: package &#39;naivebayes&#39; was built under R version 3.6.1</code></pre>
+<pre><code>## naivebayes 0.9.6 loaded</code></pre>
+<pre class="r"><code>set.seed(7)
+fit_nb &lt;- train(Attrition~.,Train,method = &#39;naive_bayes&#39;,trControl = trainControl(method = &#39;repeatedcv&#39;,number = 3))
 
-#set.seed(7)
-#fit_nb &lt;- train(Attrition~.,Train,method = &#39;nb&#39;,trControl = trainControl(method = &#39;repeatedcv&#39;,number = 3))
+Predict_nb &lt;- predict(fit_nb,Test)
 
-#Predict_nb &lt;- predict(fit_nb,Test)
-
-#confusionMatrix(Test$Attrition, Predict_nb)</code></pre>
+confusionMatrix(Test$Attrition, Predict_nb)</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction  No Yes
+##        No  299   0
+##        Yes  49   0
+##                                          
+##                Accuracy : 0.8592         
+##                  95% CI : (0.8182, 0.894)
+##     No Information Rate : 1              
+##     P-Value [Acc &gt; NIR] : 1              
+##                                          
+##                   Kappa : 0              
+##                                          
+##  Mcnemar&#39;s Test P-Value : 7.025e-12      
+##                                          
+##             Sensitivity : 0.8592         
+##             Specificity :     NA         
+##          Pos Pred Value :     NA         
+##          Neg Pred Value :     NA         
+##              Prevalence : 1.0000         
+##          Detection Rate : 0.8592         
+##    Detection Prevalence : 0.8592         
+##       Balanced Accuracy :     NA         
+##                                          
+##        &#39;Positive&#39; Class : No             
+## </code></pre>
+<pre class="r"><code>#varImp(fit_nb)</code></pre>
 </div>
 <div id="general-logistic-regression-model" class="section level1">
 <h1>General Logistic Regression Model</h1>
@@ -849,6 +868,16 @@ summary(model)</code></pre>
 ## AIC: 384.76
 ## 
 ## Number of Fisher Scoring iterations: 15</code></pre>
+<pre class="r"><code>Predictions_logreg &lt;- predict(model, Test)
+
+#Tranform the “Yes” and “No” to binary variables
+Test_logreg &lt;- Test  %&gt;% mutate(ModelPredictions = 1*(Predictions_logreg &gt; .50) + 0,
+                                 BinaryAtt = 1*(Attrition == &quot;Yes&quot;) + 0)
+#Compare the newly created columns “model_pred” and “visit_binary” to calculate the accuracy of our model       
+Final &lt;- Test_logreg %&gt;% mutate(accurate = 1*(ModelPredictions == BinaryAtt))
+#Accuracy Score
+sum(Final$accurate)/nrow(Final)</code></pre>
+<pre><code>## [1] 0.9051724</code></pre>
 </div>
 <div id="decision-tree-model" class="section level1">
 <h1>Decision Tree Model</h1>
@@ -887,7 +916,10 @@ confusionMatrix(Test$Attrition, Predictions_rpart)</code></pre>
 </div>
 <div id="other-models-for-reference" class="section level1">
 <h1>Other Models for reference</h1>
-<p>The Support Vector Machine (SVM) has the highest accuracy without sacrificing the sensitivity and specificity results.</p>
+<p>Sensitivity is the true positive rate (correct guesses for ) &amp; specificity (true negative rate) how many predictions the model accurately predicted “No”</p>
+<p>Random Forest Model is a classifier model that builds multiple decision trees and then splits out the class predicition using a random set of data points. The tree subset predicition with the highest accuracy is used in the model output.</p>
+<p>Generalized linear models (GLM) are useful when the response variable is continuous.</p>
+<p>The Support Vector Machine (SVM) finds the optimal hyperplane between binary variables and then uses that hyperplan to classify the inputs. SVM has the highest accuracy without sacrificing the sensitivity and specificity results.</p>
 <pre class="r"><code>library(mboost)</code></pre>
 <pre><code>## Warning: package &#39;mboost&#39; was built under R version 3.6.1</code></pre>
 <pre><code>## Loading required package: parallel</code></pre>
@@ -993,7 +1025,7 @@ confusionMatrix(Test$Attrition, Predictions_rf) #89% accuracy, 89/94% Sens/Spec<
 ##                                         
 ##        &#39;Positive&#39; Class : No            
 ## </code></pre>
-<pre class="r"><code>confusionMatrix(Test$Attrition, Predictions_glm) #89% accuracy, 94/63% Sens/Spec</code></pre>
+<pre class="r"><code>confusionMatrix(Test$Attrition, Predictions_glm) #90% accuracy, 94/63% Sens/Spec </code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
@@ -1049,6 +1081,92 @@ confusionMatrix(Test$Attrition, Predictions_rf) #89% accuracy, 89/94% Sens/Spec<
 ##                                           
 ##        &#39;Positive&#39; Class : No              
 ## </code></pre>
+<pre class="r"><code>varImp(fit_rf, scale = FALSE)</code></pre>
+<pre><code>## rf variable importance
+## 
+##   only 20 most important variables shown (out of 57)
+## 
+##                          Overall
+## MonthlyIncome             15.283
+## OverTimeYes                8.495
+## DailyRate                  7.867
+## Age                        7.795
+## JobInvolvement             7.487
+## TotalWorkingYears          6.553
+## EmployeeNumber             6.526
+## HourlyRate                 6.480
+## MonthlyRate                6.106
+## StockOptionLevel           6.049
+## DistanceFromHome           4.899
+## YearsAtCompany             4.650
+## PercentSalaryHike          4.624
+## NumCompaniesWorked         4.472
+## YearsSinceLastPromotion    3.189
+## RelationshipSatisfaction   3.177
+## TrainingTimesLastYear      3.172
+## WorkLifeBalance            3.128
+## YearsWithCurrManager       2.925
+## EnvironmentSatisfaction    2.829</code></pre>
+<pre class="r"><code>varImp(fit_glm, scale = FALSE)</code></pre>
+<pre><code>## glm variable importance
+## 
+##   only 20 most important variables shown (out of 56)
+## 
+##                                  Overall
+## OverTimeYes                        5.167
+## JobInvolvement                     3.667
+## NumCompaniesWorked                 3.321
+## JobSatisfaction                    3.013
+## YearsAtCompany                     2.764
+## EnvironmentSatisfaction            2.517
+## YearsInCurrentRole                 2.391
+## TotalWorkingYears                  2.269
+## `DistanceGroup6 - 10 Miles`        2.141
+## MaritalStatusSingle                2.126
+## BusinessTravelTravel_Frequently    2.079
+## YearsWithCurrManager               2.001
+## StockOptionLevel                   1.799
+## TrainingTimesLastYear              1.740
+## MonthlyIncome                      1.728
+## MaritalStatusMarried               1.714
+## `DistanceGroupLess than 6 Miles`   1.610
+## `JobRoleManufacturing Director`    1.563
+## JobLevel                           1.548
+## `AgeGroupUnder 31`                 1.460</code></pre>
+<pre class="r"><code>#varImp(fit_svm, scale = FALSE)
+
+#auc(Test$Attrition, Predictions_rf)
+#auc(Test$Attrition, Predictions_glm)
+#auc(Test$Attrition, Predictions_svm)</code></pre>
+</div>
+<div id="competition-set---applying-the-svm-model-to-the-dataset-with-the-predicited-attrition-labels." class="section level1">
+<h1>Competition Set - Applying the SVM Model to the dataset with the predicited Attrition labels.</h1>
+<pre class="r"><code>set.seed(7)
+
+Initial_svm &lt;- read.csv(url, header=TRUE, sep=&quot;,&quot;)
+
+Initial_svm$X &lt;- NULL
+Initial_svm$EmployeeCount &lt;- NULL
+Initial_svm$Over18 &lt;- NULL
+Initial_svm$StandardHours &lt;- NULL
+
+attrition$X &lt;- NULL
+attrition$EmployeeCount &lt;- NULL
+attrition$Over18 &lt;- NULL
+attrition$StandardHours &lt;- NULL
+
+fit_svm &lt;- train(Attrition~.,Initial_svm,method = &#39;svmRadial&#39;,trControl = trainControl(method = &#39;repeatedcv&#39;))
+attrition$Predictions_att &lt;- predict(fit_svm,attrition)
+
+CompetitionSet &lt;- attrition
+
+#write.csv(CompetitionSet[,c(1,33)], &quot;C:/Users/Dave/Documents/SMU_MSDS_Github/CaseStudy02/Case2PreditionsLang_Attrition.csv&quot;)</code></pre>
+</div>
+<div id="no-salary-data" class="section level1">
+<h1>No Salary data</h1>
+<pre class="r"><code>salary_url &lt;- &quot;https://raw.githubusercontent.com/GraceLang1110/SMU_MSDS_Github/master/CaseStudy02/CaseStudy2CompSet%20No%20Salary.csv&quot;
+
+Salary &lt;- read.csv(salary_url, header=TRUE, sep=&quot;,&quot;)</code></pre>
 </div>
 
 
@@ -1068,6 +1186,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
