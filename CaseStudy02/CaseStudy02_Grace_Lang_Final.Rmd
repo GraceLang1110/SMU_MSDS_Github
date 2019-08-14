@@ -93,6 +93,8 @@ prop.table(table(Explore$Attrition, Explore$DistanceGroup),2)
 #As job level increases the amount of people who leave decreases
 ggplot(Explore, aes(JobLevel,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Job Level", y="Number of Employees", title = "Attrition by Job Level") + scale_fill_manual(values = Palette)
 
+#As job level increases the amount of people who leave decreases
+ggplot(Explore, aes(TotalWorkingYears,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Job Level", y="Number of Employees", title = "Attrition by Total Working Years") + scale_fill_manual(values = Palette)
 
 #There are higher rates of attrition with lower job satisfaction
 ggplot(Explore, aes(JobSatisfaction,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Job Satisfaction", y="Number of Employees", title = "Attrition by Job Satisfaction") + scale_fill_manual(values = Palette)
@@ -260,8 +262,12 @@ confusionMatrix(Test$Attrition, Predictions_svm) #88% accuracy, 88/100% Sens/Spe
 caret::varImp(fit_rf, scale = FALSE)
 caret::varImp(fit_glm, scale = FALSE)
 varImp(object=fit_svm)
-par(mfrow=c(2,2))
-plot(varImp(object=fit_svm),   main="SVM - Variable Importance")
+
+#Plotting the Variable Importance
+ggplot(varImp(object=fit_svm), aes(x = "Variable Importance")) +
+    ggtitle("Top Variables Contributing to Turnover") +
+    coord_flip() +  theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5)) 
 
 #auc(Test$Attrition, Predictions_rf)
 #auc(Test$Attrition, Predictions_glm)
@@ -304,7 +310,7 @@ CompetitionSet <- attrition
 Applying the Random Forest model to predict Monthly Incomes because it had the lowest RMSE score. 
 Estimate the Monthly Income salaries for 300 employee records that have an RMSE < $3,000. 
 ``` {r salary investigation}
-salary_url <- "https://raw.githubusercontent.com/GraceLang1110/SMU_MSDS_Github/master/CaseStudy02/CaseStudy2CompSet%20No%20Salary.csv"
+salary_url <- "https://raw.githubusercontent.com/GraceLang1110/SMU_MSDS_Github/master/CaseStudy02/CaseStudy2CompSet_NoSalary.csv"
 
 Salary <- read.csv(salary_url, header=TRUE, sep=",")
 
