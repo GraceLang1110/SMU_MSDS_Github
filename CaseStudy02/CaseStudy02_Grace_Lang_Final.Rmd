@@ -93,8 +93,10 @@ prop.table(table(Explore$Attrition, Explore$DistanceGroup),2)
 #As job level increases the amount of people who leave decreases
 ggplot(Explore, aes(JobLevel,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Job Level", y="Number of Employees", title = "Attrition by Job Level") + scale_fill_manual(values = Palette)
 
-#As job level increases the amount of people who leave decreases
-ggplot(Explore, aes(TotalWorkingYears,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Job Level", y="Number of Employees", title = "Attrition by Total Working Years") + scale_fill_manual(values = Palette)
+#The employees that have been working less have higher attrition rates
+ggplot(Explore, aes(TotalWorkingYears,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Total Working Years", y="Number of Employees", title = "Attrition by Total Working Years") + scale_fill_manual(values = Palette)
+
+prop.table(table(Explore$Attrition, Explore$TotalWorkingYears),2)
 
 #There are higher rates of attrition with lower job satisfaction
 ggplot(Explore, aes(JobSatisfaction,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Job Satisfaction", y="Number of Employees", title = "Attrition by Job Satisfaction") + scale_fill_manual(values = Palette)
@@ -122,7 +124,7 @@ prop.table(table(Explore$Attrition, Explore$YearsSinceLastPromotion),2)
 #Creating a Promotion Bucket
 Explore$PromotionGroup <- with(Explore,ifelse(YearsSinceLastPromotion>9,"10+ Years",ifelse(YearsSinceLastPromotion>4,"5-9 Years",ifelse(YearsSinceLastPromotion>1,"2-4 Years",ifelse(YearsSinceLastPromotion>0,"1 Year","Less 1 Year")))))
 
-ggplot(Explore, aes(x=reorder(PromotionGroup,YearsSinceLastPromotion),fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Age", y="Number of Employees", title = "Attrition by Years Since Last Promotion (Grouped)") + scale_fill_manual(values = Palette)
+ggplot(Explore, aes(x=reorder(PromotionGroup,YearsSinceLastPromotion),fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Years Since Last Promotion", y="Number of Employees", title = "Attrition by Years Since Last Promotion (Grouped)") + scale_fill_manual(values = Palette)
 
 prop.table(table(Explore$Attrition, Explore$PromotionGroup),2)
 
