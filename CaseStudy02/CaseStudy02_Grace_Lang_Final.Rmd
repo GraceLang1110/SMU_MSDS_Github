@@ -4,6 +4,12 @@ author: "Grace Lang"
 date: "8/13/2019"
 output: html_document
 ---
+# Executive Summary
+According to the 2016 Compensation Force Study the average employee turnover for all industries is around 17.8%. Frito Lay has a great cuture and employee program to where their employee attrition ia almost 2 percentage points lower at 16%. However, employee churn can be expensive and cutting costs by retaining good employees is preferable for most large companies. 
+
+## Presentation
+https://youtu.be/aw0Q-w6tHNs
+
 # Introduction
 DDS Analytics has been contracted by Frito Lay to do the following: build a model that helps predict attrition for employees, reveal top 3 factors that lead to attrition, and understand some common trends of employees who decide to leave the company. 
 
@@ -116,8 +122,11 @@ prop.table(table(Explore$Attrition, Explore$AgeGroup),2)
 
 ggplot(Explore, aes(x=reorder(AgeGroup,Age),fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Age Group", y="Number of Employees", title = "Attrition by Age Group") + scale_fill_manual(values = Palette)
 
+#YMonthly Income
+ggplot(Explore, aes(MonthlyIncome,fill=Attrition)) + geom_histogram() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Monthly Income", y="Number of Employees", title = "Attrition by Monthly Income") + scale_fill_manual(values = Palette)
+
 #Years since last promotion
-ggplot(Explore, aes(YearsSinceLastPromotion,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Age", y="Number of Employees", title = "Attrition by Years Since Last Promotion") + scale_fill_manual(values = Palette)
+ggplot(Explore, aes(YearsSinceLastPromotion,fill=Attrition)) + geom_bar() + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) + labs(x="Years Since Last Promotion", y="Number of Employees", title = "Attrition by Years Since Last Promotion") + scale_fill_manual(values = Palette)
 
 prop.table(table(Explore$Attrition, Explore$YearsSinceLastPromotion),2)
 
@@ -302,7 +311,7 @@ attrition$StandardHours <- NULL
 fit_svm <- train(Attrition~.,Initial_svm,method = 'svmRadial',trControl = trainControl(method = 'repeatedcv'))
 attrition$Predictions_att <- predict(fit_svm,attrition)
 
-CompetitionSet <- attrition
+CompetitionSet <- attrition %>% arrange(ID)
 
 #write.csv(CompetitionSet[,c(1,33)], "C:/Users/Dave/Documents/SMU_MSDS_Github/CaseStudy02/Case2PreditionsLang_Attrition.csv")
 
@@ -342,9 +351,9 @@ RMSE(PredictionsSal_lm,Test$MonthlyIncome) #64.18391 # Linear Model; same as abo
 RMSE(PredictionsSal_svm,Test$MonthlyIncome) #62.56897 # SUpport Vector Machine
 
 #Creating a new output document with the predicted salaries
-#Salary$Predictions_Income <- predict(PredictionsSal_rf,Salary)
+Salary$Predictions_Income <- as.integer(predict(sal_rf,Salary))
 
-#CompetitionSalary <- Salary
+CompetitionSalary <- Salary %>% arrange(ID)
 
 #write.csv(CompetitionSalary[,c(1,33)], "C:/Users/Dave/Documents/SMU_MSDS_Github/CaseStudy02/Case2PreditionsLang_Salary.csv")
 ```
