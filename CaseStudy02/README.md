@@ -1,7 +1,7 @@
 # Frito Lay Employee Attrition Analysis
 _Case Study 02_
 
-# Executive Summary
+## Executive Summary
 According to the 2016 Compensation Force Study the average employee turnover for all industries is around 17.8%. Frito Lay has a great cuture and employee program to where their employee attrition ia almost 2 percentage points lower at 16%. However, employee churn can be expensive and cutting costs by retaining good employees is preferable for most large companies. 
 
 ## Introduction
